@@ -16,7 +16,6 @@ var accountCmd = &cobra.Command{
 	Short: "Create account.",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		// output, err := ExecuteCommand("git", "rev-parse", args...)
 		privateKey, err := crypto.GenerateKey()
 		publicKey := privateKey.Public()
 		publicKeyECDSA, _ := publicKey.(*ecdsa.PublicKey)
@@ -28,6 +27,9 @@ var accountCmd = &cobra.Command{
 
 		fmt.Fprintln(os.Stdout, "[Private Key]    >>> ", hex.EncodeToString(crypto.FromECDSA(privateKey)))
 		fmt.Fprintln(os.Stdout, "[Public Address] >>> ", fromAddress.Hex())
+		if err := crypto.SaveECDSA(".privatekey", privateKey); err != nil {
+			Error(cmd, args, err)
+		}
 	},
 }
 
