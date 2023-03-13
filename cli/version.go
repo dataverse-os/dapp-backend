@@ -9,10 +9,10 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "version subcommand show git version info.",
+	Short: "show version.",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		output, err := ExecuteCommand("git", "log", args...)
+		output, err := ExecuteCommand("git", "rev-parse", "HEAD")
 		if err != nil {
 			Error(cmd, args, err)
 		}
