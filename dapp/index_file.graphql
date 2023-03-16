@@ -1,0 +1,19 @@
+type IndexFile
+  @createModel(accountRelation: LIST, description: "IndexFile") {
+  author: DID! @documentAccount
+  version: CommitID! @documentVersion
+  appVersion: String! @string(maxLength: 100)
+  contentId: String! @string(maxLength: 1000)
+  contentType: String! @string(maxLength: 100)
+  comment: String! @string(maxLength: 300000000)
+  relation: String @string(maxLength: 300000000)
+  additional: String @string(maxLength: 300000000)
+  datatokenId: String @string(maxLength: 1000)
+  fileType: Int!
+  encryptedSymmetricKey: String @string(maxLength: 300000000)
+  decryptionConditions: String @string(maxLength: 300000000)
+  decryptionConditionsType: String @string(maxLength: 100)
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deleted: Boolean
+}

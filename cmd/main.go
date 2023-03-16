@@ -1,7 +1,9 @@
 package main
 
-import "dapp-backend/cli"
+import (
+	"dapp-backend/internal/routers"
+)
 
 func main() {
-	cli.Execute()
+	routers.InitRouter()
 }
