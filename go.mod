@@ -1,6 +1,6 @@
 module dapp-backend
 
-go 1.19
+go 1.20
 
 require (
 	github.com/ethereum/go-ethereum v1.10.15
@@ -9,6 +9,7 @@ require (
 	github.com/samber/lo v1.37.0
 	github.com/spf13/cobra v1.6.1
 	github.com/tidwall/gjson v1.14.4
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -40,5 +41,4 @@ require (
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

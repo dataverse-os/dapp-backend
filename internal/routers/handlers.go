@@ -1,60 +1,83 @@
 package routers
 
 import (
-	"dapp-backend/dapp"
-	"dapp-backend/internal"
+	"dapp-backend/ceramic"
 	"dapp-backend/verify"
-	"encoding/json"
-	"fmt"
-	"io"
+	"net/http"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
+	"gopkg.in/yaml.v3"
 )
 
+func validate(ctx *gin.Context) {
+	resp := ResponseNonce[any]{
+		Message: "Success",
+		Nonce:   ctx.GetHeader("dataverse-nonce"),
+	}
+	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
+}
+
 func createDapp(ctx *gin.Context) {
-	name := ctx.GetString("DATAVERSE_NAME")
-	if name == "" {
-		ctx.AbortWithError(400, fmt.Errorf("empty input dapp name"))
+	var msg CreateMessage
+	if err := yaml.NewDecoder(ctx.Request.Body).Decode(&msg); err != nil {
+		ctx.AbortWithStatusJSON(400, err)
 		return
 	}
-	schemas, err := CreateDappModels(ctx, name)
-	if err != nil {
-		ctx.AbortWithError(400, err)
-		return
+	resp := ResponseNonce[map[string]string]{
+		Message: "Success",
+		Nonce:   ctx.GetHeader("dataverse-nonce"),
+		Data:    make(map[string]string),
 	}
-	result, _ := json.Marshal(schemas)
-	responseWithSignedNonce(ctx, []byte(fmt.Sprintf("Status:Success/n%s", result)))
+	for _, v := range msg.Models {
+		_, streamID, err := ceramic.GenerateComposite(ctx, v)
+		if err != nil {
+			resp.Message = err.Error()
+			break
+		}
+		resp.Data[streamID] = v
+	}
+	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
 }
 
 func createModel(ctx *gin.Context) {
-	body, err := io.ReadAll(ctx.Request.Body)
+	var msg SetExternalModelsMessage
+	if err := yaml.NewDecoder(ctx.Request.Body).Decode(&msg); err != nil {
+		ctx.AbortWithStatusJSON(400, err)
+		return
+	}
+	resp := ResponseNonce[map[string]string]{
+		Message: "Success",
+		Nonce:   ctx.GetHeader("dataverse-nonce"),
+	}
+	_, streamID, err := ceramic.GenerateComposite(ctx, msg.Schema)
 	if err != nil {
-		ctx.AbortWithError(400, err)
-		return
+		resp.Message = err.Error()
+	} else {
+		resp.Data[streamID] = msg.Schema
 	}
-	var modelPath, streamID string
-	if streamID, modelPath, err = dapp.GenerateCompositeJsonWithGraphql(ctx, body); err != nil {
-		ctx.AbortWithError(400, err)
-		return
-	}
-	if err = dapp.DeployCompositeJson(ctx, modelPath); err != nil {
-		ctx.AbortWithError(400, err)
-		return
-	}
-	responseWithSignedNonce(ctx, []byte(fmt.Sprintf("Status:Success/n%s", streamID)))
+	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
 }
 
-func responseWithSignedNonce(ctx *gin.Context, data []byte) {
-	nonce := ctx.GetHeader("dataverse-nonce")
-	if nonce == "" {
-		ctx.AbortWithError(400, fmt.Errorf("invalid nonce"))
-		return
-	}
-	result := fmt.Sprintf("%s\nNonce:%s", data, nonce)
-	sig, err := verify.SignData([]byte(result), internal.PrivateKey)
+type yamlRender struct {
+	render.YAML
+}
+
+func (r yamlRender) Render(w http.ResponseWriter) error {
+	r.WriteContentType(w)
+
+	bytes, err := yaml.Marshal(r.Data)
 	if err != nil {
-		ctx.AbortWithError(500, err)
+		return err
 	}
-	ctx.Header("dataverse-sig", string(sig))
-	ctx.String(200, result)
+
+	sig, err := verify.SignData(bytes, key)
+	if err != nil {
+		return err
+	}
+	w.Header()["dataverse-sig"] = []string{hexutil.Encode(sig)}
+
+	_, err = w.Write(bytes)
+	return err
 }

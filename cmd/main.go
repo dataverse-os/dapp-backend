@@ -1,9 +1,19 @@
 package main
 
 import (
-	"dapp-backend/internal/routers"
+	"errors"
+
+	"github.com/spf13/cobra"
 )
 
+var rootCmd = &cobra.Command{
+	Use: "dapp-backend",
+	Run: func(cmd *cobra.Command, args []string) {
+		Error(cmd, args, errors.New("unrecognized command"))
+	},
+}
+
 func main() {
-	routers.InitRouter()
+	rootCmd.AddCommand(daemonCmd, generateKeyCmd)
+	rootCmd.Execute()
 }

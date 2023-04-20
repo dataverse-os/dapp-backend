@@ -41,11 +41,9 @@ func PrivateKeyToDID(ctx context.Context, key *ecdsa.PrivateKey) (did string, er
 	return
 }
 
-var CeramicConfigPath = os.Getenv("CERAMIC_CONFIG_PATH")
-
 func CheckIfCeramicAdminKeyFromFile(ctx context.Context, key *ecdsa.PrivateKey) (_ bool, err error) {
 	var configBytes []byte
-	if configBytes, err = os.ReadFile(filepath.Join(CeramicConfigPath, ".ceramic/daemon.config.json")); err != nil {
+	if configBytes, err = os.ReadFile(filepath.Join(os.Getenv("CERAMIC_CONFIG_PATH"), ".ceramic/daemon.config.json")); err != nil {
 		return
 	}
 	return CheckIfCeramicAdminKey(ctx, configBytes, key)

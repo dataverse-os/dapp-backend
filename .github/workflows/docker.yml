@@ -1,0 +1,118 @@
+name: build-docker-image
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - "**.txt"
+  # pull_request:
+
+env:
+  CONTAINER: dapp-backend
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  build:
+    name: Build for multi-platform
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        PLATFORM:
+          - linux/amd64
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::164331695891:role/GitHubAction
+          aws-region: ap-east-1
+
+      - name: Login to Amazon ECR Private
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.CONTAINER }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+          flavor: suffix=-${{ matrix.platform }}
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ matrix.PLATFORM }}
+      - uses: cloudposse/github-action-matrix-outputs-write@main
+        id: out
+        with:
+          matrix-step-name: ${{ github.job }}
+          matrix-key: ${{ matrix.PLATFORM }}
+          outputs: |-
+            digest: ${{ steps.build.outputs.digest }}
+
+  merge-manifest:
+    needs:
+      - build
+    name: Merge image of multi-platform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::164331695891:role/GitHubAction
+          aws-region: ap-east-1
+      - name: Login to Amazon ECR Private
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Docker meta
+        id: metadata
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ env.CONTAINER }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      - uses: cloudposse/github-action-matrix-outputs-read@main
+        id: read
+        with:
+          matrix-step-name: build
+      - name: map to array
+        id: array
+        run: |
+          result="$(echo '${{ steps.read.outputs.result }}' | jq -c '.digest | to_entries | map(.value) | join(",")')"
+          echo "result=${result}" >> $GITHUB_OUTPUT
+      - uses: fdkevin0/docker-manifest-create-action@v1
+        with:
+          tags: ${{ steps.metadata.outputs.tags }}
+          digests: ${{ fromJson(steps.array.outputs.result) }}

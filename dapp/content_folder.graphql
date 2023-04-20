@@ -1,7 +1,0 @@
-type ContentFolder
-  @createModel(accountRelation: LIST, description: "ContentFolder") {
-  author: DID! @documentAccount
-  version: CommitID! @documentVersion
-  indexFolderId: String! @string(maxLength: 1000)
-  mirrors: String! @string(maxLength: 300000000)
-}
