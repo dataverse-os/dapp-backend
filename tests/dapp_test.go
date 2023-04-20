@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -13,6 +14,9 @@ import (
 )
 
 func TestVerify(t *testing.T) {
+	if os.Getenv("DAPP_BACKEND") == "" {
+		t.Skip("skip case without dapp-backend daemon")
+	}
 	privateKey, _ := crypto.HexToECDSA("c0eb4f72a47364ac981c9db9636f4809108401126146c3319f2c27286d453b90")
 	publicKey := privateKey.Public()
 	publicKeyECDSA, _ := publicKey.(*ecdsa.PublicKey)
@@ -32,7 +36,7 @@ func TestVerify(t *testing.T) {
 		fmt.Println(msg)
 		fmt.Println(sig)
 
-		req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/dataverse/dapp", bytes.NewBufferString(string(data)))
+		req, _ := http.NewRequest(http.MethodPost, os.Getenv("DAPP_BACKEND")+"/dataverse/dapp", bytes.NewBufferString(string(data)))
 		req.Header.Set("dataverse-sig", sig)
 		req.Header.Set("dataverse-nonce", "123456")
 		resp, err := http.DefaultClient.Do(req)

@@ -24,16 +24,7 @@ func TestCheckSign(t *testing.T) {
 			name: "common",
 			args: args{
 				data: []byte("I want create a dataverse Dapp:\nName:dTwit\nCeramic Url:https://ceramic.dtwit.com\n"),
-				sig:  "0x4af1babce1fe5a0a547d7a3d019393ba26efbe2a9248bf6353fd7b51e75086f16b45c3e713539632741e29c846b492b6732f9102af84b31c3df34d1d4f16be9f00",
-				key:  &lo.Must(crypto.HexToECDSA("c0eb4f72a47364ac981c9db9636f4809108401126146c3319f2c27286d453b90")).PublicKey,
-			},
-			wantErr: false,
-		},
-		{
-			name: "common",
-			args: args{
-				data: []byte("hello"),
-				sig:  "0xb32c89d7f2d9ec26b7394d8d81a367416feb9ec1d4a1387cc3ed0f465c4178d451a581c231bf901a7cfce8844a0a227aa1fabdc9686a546f8f000b3dab1937411c",
+				sig:  "0x462efe78ae51f25a8516d3ce14a84eb7366d191ae95a8c3f067f34750d73b68f4174b29c9c94ed0ca2c0008b437fbed5030b311b83f0e39ebe5baa4a7d2053861b",
 				key:  &lo.Must(crypto.HexToECDSA("c0eb4f72a47364ac981c9db9636f4809108401126146c3319f2c27286d453b90")).PublicKey,
 			},
 			wantErr: false,
@@ -63,7 +54,7 @@ func TestCheckSignWithHexPublicKey(t *testing.T) {
 			name: "common",
 			args: args{
 				origin: "I want create a dataverse Dapp:\nName:dTwit\nCeramic Url:https://ceramic.dtwit.com\n",
-				signed: "0x4af1babce1fe5a0a547d7a3d019393ba26efbe2a9248bf6353fd7b51e75086f16b45c3e713539632741e29c846b492b6732f9102af84b31c3df34d1d4f16be9f00",
+				signed: "0x462efe78ae51f25a8516d3ce14a84eb7366d191ae95a8c3f067f34750d73b68f4174b29c9c94ed0ca2c0008b437fbed5030b311b83f0e39ebe5baa4a7d2053861b",
 			},
 			wantHexKey: crypto.PubkeyToAddress(lo.Must(crypto.HexToECDSA("c0eb4f72a47364ac981c9db9636f4809108401126146c3319f2c27286d453b90")).PublicKey).Hex(),
 			wantErr:    false,
@@ -78,6 +69,41 @@ func TestCheckSignWithHexPublicKey(t *testing.T) {
 			}
 			if gotHexKey != tt.wantHexKey {
 				t.Errorf("CheckSignWithHexPublicKey() = %v, want %v", gotHexKey, tt.wantHexKey)
+			}
+		})
+	}
+}
+
+func TestSignData(t *testing.T) {
+	type args struct {
+		data       []byte
+		privateKey *ecdsa.PrivateKey
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantSignature string
+		wantErr       bool
+	}{
+		{
+			name: "common",
+			args: args{
+				data:       []byte("I want create a dataverse Dapp:\nName:dTwit\nCeramic Url:https://ceramic.dtwit.com\n"),
+				privateKey: lo.Must(crypto.HexToECDSA("c0eb4f72a47364ac981c9db9636f4809108401126146c3319f2c27286d453b90")),
+			},
+			wantSignature: "0x462efe78ae51f25a8516d3ce14a84eb7366d191ae95a8c3f067f34750d73b68f4174b29c9c94ed0ca2c0008b437fbed5030b311b83f0e39ebe5baa4a7d2053861b",
+			wantErr:       false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSignature, err := verify.SignData(tt.args.data, tt.args.privateKey)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SignData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotSignature != tt.wantSignature {
+				t.Errorf("SignData() = %v, want %v", gotSignature, tt.wantSignature)
 			}
 		})
 	}

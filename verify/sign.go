@@ -32,10 +32,12 @@ func ExportPublicKey(origin string, signed string) (hexKey string, err error) {
 	return
 }
 
-func SignData(data []byte, privateKey *ecdsa.PrivateKey) (signature []byte, err error) {
+func SignData(data []byte, privateKey *ecdsa.PrivateKey) (hexSig string, err error) {
+	var signature []byte
 	if signature, err = crypto.Sign(accounts.TextHash(data), privateKey); err != nil {
 		return
 	}
 	signature[64] += 27
+	hexSig = hexutil.Encode(signature)
 	return
 }

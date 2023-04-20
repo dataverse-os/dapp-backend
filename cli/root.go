@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -18,5 +19,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalln(err)
+	}
 }

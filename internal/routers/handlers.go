@@ -5,7 +5,6 @@ import (
 	"dapp-backend/verify"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
 	"gopkg.in/yaml.v3"
@@ -76,7 +75,7 @@ func (r yamlRender) Render(w http.ResponseWriter) error {
 	if err != nil {
 		return err
 	}
-	w.Header()["dataverse-sig"] = []string{hexutil.Encode(sig)}
+	w.Header()["dataverse-sig"] = []string{sig}
 
 	_, err = w.Write(bytes)
 	return err

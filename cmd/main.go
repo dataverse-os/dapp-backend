@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -15,5 +16,7 @@ var rootCmd = &cobra.Command{
 
 func main() {
 	rootCmd.AddCommand(daemonCmd, generateKeyCmd)
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalln(err)
+	}
 }
