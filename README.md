@@ -99,9 +99,10 @@ services:
     environment:
       - DID_PRIVATE_KEY={YOUR_PRIVATE_KEY}
       - CERAMIC_URL=http://ceramic:7007
+    ports:
+      - "8080:8080"
     depends_on:
       - ceramic
-
 
 ```
 
@@ -116,9 +117,9 @@ docker-compose up -d
 view details in the [create-dataverse-app docs](https://github.com/dataverse-os/create-dataverse-app#readme).
 
 
-### [Optional] Run ceramic node on the mainnet
+## [Optional] Run ceramic node on the mainnet
 
-#### Verify your email address
+### Verify your email address
 
 ```bash
 curl --request POST \
@@ -127,7 +128,7 @@ curl --request POST \
   --data '{"email": "youremailaddress"}'
 ```
 Then check your email and copy the one time passcode enclosed within. It will be a string of letters and numbers similar to this: 2451cc10-5a39-494d-b8eb-1971ecd813de.
-#### Send a revocation request
+### Send a revocation request
 ```bash
  curl --request POST \
   --url https://cas.3boxlabs.com/api/v0/auth/did \
