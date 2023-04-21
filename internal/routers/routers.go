@@ -47,7 +47,12 @@ func InitRouter() {
 			MaxAge: 12 * time.Hour,
 		}),
 	)
-	router.Any("/v0", func(ctx *gin.Context) {
+	router.Any("/api/v0/*path", func(ctx *gin.Context) {
+		fmt.Println("-==-================------------====")
+		fmt.Println(ctx.Param("path"))
+		fmt.Println(ctx.Request.URL)
+		fmt.Println("-==-================------------====")
+
 		u, _ := url.Parse(os.Getenv("CERAMIC_URL"))
 		ctx.Request.URL.Scheme = u.Scheme
 		ctx.Request.URL.Host = u.Host
