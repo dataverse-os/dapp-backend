@@ -1,24 +1,3 @@
-# dapp-backend
-
-为了简化开发者的理解门槛。有两个可选的做法：
-
-1. 仓库下可以增设两个目录 1）链接到Ceramic节点的仓库   2）开发者部署 应用后端+Ceramic节点的 云脚本  
-
-2. 单独开一个仓库，放置 应用后端+Ceramic节点的 云脚本  
-
-
-完善readme
-
-## Usage
-
-### Use Docker Compose
-
-```shell
-#初始化ceramic目录
-docker run -it --rm -v ~/.ceramic/:/root/.ceramic/ ceramicnetwork/js-ceramic:latest
-```
-
-```yaml
 version: "3.9"
 services:
   ceramic:
@@ -39,4 +18,3 @@ services:
       - CERAMIC_URL=http://ceramic:7007
     depends_on:
       - ceramic
-```

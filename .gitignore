@@ -1,3 +1,4 @@
 .privatekey
 .vscode
 *.exe
+docker-compose.yml

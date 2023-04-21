@@ -12,7 +12,7 @@ COPY . /build
 RUN go mod download
 RUN go build -ldflags="-s -w" -o /app/dapp-backend.exe /build/cmd/
 
-FROM ceramicnetwork/js-ceramic:latest
+FROM alpine
 
 WORKDIR /app
 COPY --from=builder /app/dapp-backend.exe /app/dapp-backend.exe

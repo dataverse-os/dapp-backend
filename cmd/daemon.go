@@ -17,8 +17,9 @@ var daemonCmd = &cobra.Command{
 			log.Printf("Environment DID_PRIVATE_KEY not found, Generate a private key now\n\n")
 			ceramic.GenerateKey()
 			return
+		} else {
+			routers.InitRouter()
+			routers.Start()
 		}
-		routers.InitRouter()
-		routers.Start()
 	},
 }
