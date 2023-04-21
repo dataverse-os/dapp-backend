@@ -14,7 +14,7 @@ Scripts to help deploy a ceramic node with dataverse backend.
 - Git
 - Docker [Docs](https://docs.docker.com/get-docker/)
 - docker-compose [Docs](https://docs.docker.com/compose/install/)
-- jq [Docs](https://stedolan.github.io/jq/download/)
+- node (version >= 16) [Docs](https://nodejs.org/en/download/)
 
 ## Installation
 Clone the repo
@@ -52,7 +52,25 @@ did:key:z6MkiM1beKfKoNAS5cqHTFMrWAqqHkdb7meMqMBurDDgnTRn
 ```
 
 ### Config your ceramic node
+modify ```daemon.config.json``` to include your admin DID.
+```json
+{
+  ...
+  "http-api": {
+    "cors-allowed-origins": [".*"],
+    "admin-dids": ["Your Admin DID here"]
+  },
+  ...
+}
+
+```
+
+copy the config to ceramic config folder
+
+under ```dapp-backend/```
 ```bash
+mkdir ~/.ceramic
+cp ./daemon.config.json ~/.ceramic/daemon.config.json
 ```
 
 ### Update docker-compose.yml
