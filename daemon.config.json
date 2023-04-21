@@ -23,7 +23,7 @@
     "local-directory": "~/.ceramic/statestore/"
   },
   "indexing": {
-    "db": "sqlite://~.ceramic/indexing.sqlite",
+    "db": "sqlite://~/.ceramic/indexing.sqlite",
     "allow-queries-before-historical-sync": true
   }
 }
