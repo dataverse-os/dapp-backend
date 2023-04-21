@@ -1,24 +1,64 @@
+<br/>
+<p align="center">
+<a href=" " target="_blank">
+<img src="https://raw.githubusercontent.com/dataverse-os/create-dataverse-app/main/logo.svg" width="180" alt="Dataverse logo">
+</a >
+</p >
+<br/>
+
 # dapp-backend
 
-为了简化开发者的理解门槛。有两个可选的做法：
+Scripts to help deploy a ceramic node with dataverse backend.
 
-1. 仓库下可以增设两个目录 1）链接到Ceramic节点的仓库   2）开发者部署 应用后端+Ceramic节点的 云脚本  
+## Requirements
+- Git
+- Docker [Docs](https://docs.docker.com/get-docker/)
+- docker-compose [Docs](https://docs.docker.com/compose/install/)
+- jq [Docs](https://stedolan.github.io/jq/download/)
 
-2. 单独开一个仓库，放置 应用后端+Ceramic节点的 云脚本  
+## Installation
+Clone the repo
 
-
-完善readme
-
-## Usage
-
-### Use Docker Compose
-
-```shell
-#初始化ceramic目录
-docker run -it --rm -v ~/.ceramic/:/root/.ceramic/ ceramicnetwork/js-ceramic:latest
+```bash
+git clone https://github.com/dataverse-os/dapp-backend
+cd dapp-backend
 ```
 
-```yaml
+## Getting started
+
+### Generate private key and Admin DID
+
+```bash
+npm install -g @composedb/cli
+composedb did:generate-private-key
+```
+**Example Result**
+```bash
+✔ Generating random private key... Done!
+8053f2d22cb3da5f84b6f079eb40cdc49958a7da269de3610e63e8b8078f1448
+```
+
+Keep your private key safe. You will need it to use the ceramic node.
+
+generate DID from private key
+```bash
+composedb did:from-private-key 8053f2d22cb3da5f84b6f079eb40cdc49958a7da269de3610e63e8b8078f1448
+```
+
+**Example Result**
+```bash
+✔ Creating DID... Done!
+did:key:z6MkiM1beKfKoNAS5cqHTFMrWAqqHkdb7meMqMBurDDgnTRn
+```
+
+### Config your ceramic node
+```bash
+```
+
+### Update docker-compose.yml
+
+modify the docker-compose.yml file to include your private key.
+```YAML
 version: "3.9"
 services:
   ceramic:
@@ -26,7 +66,11 @@ services:
     volumes:
       - ~/.ceramic/:/root/.ceramic/
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:7007/api/v0/node/healthcheck || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:7007/api/v0/node/healthcheck || exit 1"
+        ]
       interval: 1m30s
       timeout: 10s
       retries: 3
@@ -35,8 +79,50 @@ services:
   dapp-backend:
     image: dataverseos/dapp-backend:latest
     environment:
-      - DID_PRIVATE_KEY={YOUR_PRIVATE_KEY_HERE}
+      - DID_PRIVATE_KEY={YOUR_PRIVATE_KEY}
       - CERAMIC_URL=http://ceramic:7007
     depends_on:
       - ceramic
+
+
 ```
+
+### Run ceramic node
+
+```bash
+docker-compose up -d
+```
+
+## Use the ceramic node to create dataverse apps
+
+view details in the [create-dataverse-app docs](https://github.com/dataverse-os/create-dataverse-app#readme).
+
+
+### [Optional] Run ceramic node on the mainnet
+
+#### Verify your email address
+
+```bash
+curl --request POST \
+  --url https://cas.3boxlabs.com/api/v0/auth/verification \
+  --header 'Content-Type: application/json' \
+  --data '{"email": "youremailaddress"}'
+```
+Then check your email and copy the one time passcode enclosed within. It will be a string of letters and numbers similar to this: 2451cc10-5a39-494d-b8eb-1971ecd813de.
+#### Send a revocation request
+```bash
+ curl --request POST \
+  --url https://cas.3boxlabs.com/api/v0/auth/did \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "youremailaddress",
+      "otp": "youronetimepasscode",
+      "dids": [
+          "yourdid"
+      ]
+  }'
+  ```
+
+## Contributing
+
+Contributions are always welcome! Open a PR or an issue!
