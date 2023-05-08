@@ -113,6 +113,10 @@ docker-compose up -d
 ```
 This command will start the ceramic node on port `7007` and the dapp-backend server on `8080`. You can change the port to use by changing the port in the docker-compose.yml file.
 
+
+### Configure SSL certificate
+To let your app connect to the ceramic node safely, you need to configure SSL certificate. You can use [Let's Encrypt](https://letsencrypt.org/) to get a free SSL certificate.
+
 ## Use the ceramic node to create dataverse apps
 
 view details in the [create-dataverse-app docs](https://github.com/dataverse-os/create-dataverse-app#readme).
