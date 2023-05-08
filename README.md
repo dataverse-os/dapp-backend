@@ -111,6 +111,7 @@ services:
 ```bash
 docker-compose up -d
 ```
+This command will start the ceramic node on port `7007` and the dapp-backend server on `8080`. You can change the port to use by changing the port in the docker-compose.yml file.
 
 ## Use the ceramic node to create dataverse apps
 
