@@ -23,3 +23,4 @@ var daemonCmd = &cobra.Command{
 		}
 	},
 }
+
