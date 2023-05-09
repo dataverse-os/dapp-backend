@@ -1,12 +1,8 @@
 {
   "anchor": {},
   "http-api": {
-    "cors-allowed-origins": [
-      ".*"
-    ],
-    "admin-dids": [
-      "did:key:z6MkiM1beKfKoNAS5cqHTFMrWAqqHkdb7meMqMBurDDgnTRn#z6MkiM1beKfKoNAS5cqHTFMrWAqqHkdb7meMqMBurDDgnTRn"
-    ]
+    "cors-allowed-origins": [".*"],
+    "admin-dids": ["Your Admin DID here"]
   },
   "ipfs": {
     "mode": "bundled"
@@ -19,7 +15,7 @@
     "metrics-exporter-enabled": false
   },
   "network": {
-    "name": "mainnet"
+    "name": "testnet-clay"
   },
   "node": {},
   "state-store": {
@@ -27,7 +23,7 @@
     "local-directory": "~/.ceramic/statestore/"
   },
   "indexing": {
-    "db": "sqlite://~.ceramic/indexing.sqlite",
+    "db": "sqlite://~/.ceramic/indexing.sqlite",
     "allow-queries-before-historical-sync": true
   }
 }
