@@ -1,15 +1,23 @@
 package main
 
-// func ExecuteCommand(name string, subname string, args ...string) (string, error) {
-// 	args = append([]string{subname}, args...)
+import (
+	"fmt"
+	"os"
+	"os/exec"
 
-// 	cmd := exec.Command(name, args...)
-// 	bytes, err := cmd.CombinedOutput()
+	"github.com/spf13/cobra"
+)
 
-// 	return string(bytes), err
-// }
+func ExecuteCommand(name string, subname string, args ...string) (string, error) {
+	args = append([]string{subname}, args...)
 
-// func Error(cmd *cobra.Command, args []string, err error) {
-// 	fmt.Fprintf(os.Stderr, "execute %s args:%v error:%v\n", cmd.Name(), args, err)
-// 	os.Exit(1)
-// }
+	cmd := exec.Command(name, args...)
+	bytes, err := cmd.CombinedOutput()
+
+	return string(bytes), err
+}
+
+func Error(cmd *cobra.Command, args []string, err error) {
+	fmt.Fprintf(os.Stderr, "execute %s args:%v error:%v\n", cmd.Name(), args, err)
+	os.Exit(1)
+}
