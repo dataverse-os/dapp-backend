@@ -8,7 +8,7 @@ import (
 )
 
 var generateKeyCmd = &cobra.Command{
-	Use: "generaye-key",
+	Use: "generate-key",
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},

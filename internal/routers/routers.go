@@ -47,11 +47,12 @@ func InitRouter() {
 			MaxAge: 12 * time.Hour,
 		}),
 	)
-	router.Any("/v0", func(ctx *gin.Context) {
+	router.Any("/api/*path", func(ctx *gin.Context) {
 		u, _ := url.Parse(os.Getenv("CERAMIC_URL"))
 		ctx.Request.URL.Scheme = u.Scheme
 		ctx.Request.URL.Host = u.Host
 		req := httputil.NewSingleHostReverseProxy(ctx.Request.URL)
+		fmt.Println("send to: ", ctx.Request.URL)
 		req.ServeHTTP(ctx.Writer, ctx.Request)
 		ctx.Abort()
 	})
