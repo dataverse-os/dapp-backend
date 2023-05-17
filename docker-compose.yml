@@ -18,8 +18,9 @@ services:
   dapp-backend:
     image: dataverseos/dapp-backend:latest
     environment:
-      - DID_PRIVATE_KEY={YOUR_PRIVATE_KEY}
       - CERAMIC_URL=http://ceramic:7007
+    env_file:
+      - .private-key.env
     ports:
       - "8080:8080"
     depends_on:
