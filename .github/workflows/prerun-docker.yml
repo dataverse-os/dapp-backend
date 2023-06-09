@@ -1,4 +1,4 @@
-name: build-docker-image
+name: build-prerun-docker-image
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   # pull_request:
 
 env:
-  CONTAINER: dapp-backend
+  CONTAINER: dapp-backend-prerun
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           # list of Docker images to use as base name for tags
-          images: dataverseos/dapp-backend
+          images: dataverseos/dapp-backend-prerun
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -52,7 +52,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ./prerun
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
