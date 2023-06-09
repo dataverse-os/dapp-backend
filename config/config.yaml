@@ -1,0 +1,7 @@
+MysqlConfig:
+  host: "localhost"
+  port: 3306
+  database: dapp-backend
+  username: root
+  # password: f=4p9NWjx%Yn@kf5R]L1A
+  password: fn@k]L1A

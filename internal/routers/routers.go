@@ -61,6 +61,11 @@ func InitRouter() {
 		d.POST("/validate", validate)
 		d.POST("/dapp", createDapp)
 		d.POST("/model", createModel)
+		d.POST("/dapp/upgrade", upgradeDapp)
+	}
+	{
+		d.GET("/user/version", getVersion)
+		d.POST("/user/version", updateDapp)
 	}
 }
 

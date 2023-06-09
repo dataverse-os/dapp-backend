@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dapp-backend/internal"
 	"errors"
 	"log"
 
@@ -15,6 +16,7 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
+	internal.InitMySQL()
 	rootCmd.AddCommand(daemonCmd, generateKeyCmd)
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)

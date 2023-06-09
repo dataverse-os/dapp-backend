@@ -80,3 +80,25 @@ func (r yamlRender) Render(w http.ResponseWriter) error {
 	_, err = w.Write(bytes)
 	return err
 }
+
+func upgradeDapp(ctx *gin.Context) {
+
+	resp := ResponseNonce[any]{
+		Message: "Success",
+	}
+	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
+}
+
+func getVersion(ctx *gin.Context) {
+	resp := ResponseNonce[any]{
+		Message: "Success",
+	}
+	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
+}
+
+func updateDapp(ctx *gin.Context) {
+	resp := ResponseNonce[any]{
+		Message: "Success",
+	}
+	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
+}
