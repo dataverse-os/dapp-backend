@@ -21,17 +21,23 @@ jobs:
         with:
           node-version: 16
 
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 7
+          run_install: false
+
       - name: generate js-scripts
         working-directory: js-scripts
         run: |
-          npm install
-          npm run build
+          pnpm install
+          pnpm run build
 
       - name: setup ceramic secret and config
         id: ceramic-secret
         run: |
-          npm install -g @composedb/cli@^0.4.0
-          npm install -g @ceramicnetwork/cli@next
+          pnpm install -g @composedb/cli@^0.4.0
+          pnpm install -g @ceramicnetwork/cli@next
           export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
           mkdir -p  ~/.ceramic
