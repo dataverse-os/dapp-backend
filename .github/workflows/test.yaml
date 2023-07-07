@@ -28,7 +28,29 @@ jobs:
           npm install
           npm run build
 
+      - name: setup ceramic private key
+        id: ceramic-secret
+        run: |
+          echo (openssl rand -hex 32) >> "$CERAMIC_ADMIN_KEY"
+          echo (composedb did:from-private-key ${$CERAMIC_ADMIN_KEY}) >> "$CERAMIC_ADMIN_DID"
+
+      - name: setup ceramic instance
+        run: |
+          npm install -g @ceramicnetwork/cli
+          envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
+          ceramic daemon
+        env:
+          CERAMIC_ADMIN_KEY: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_KEY }}
+          CERAMIC_NETWORK: inmemory
+      
+      - name: check ceramic instance status
+        run: curl http://localhost:7007/api/v0/node/healthcheck
+
       - name: Run coverage
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        env:
+          CERAMIC_URL: http://localhost:7007
+          CERAMIC_ADMIN_KEY: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_KEY }}
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
