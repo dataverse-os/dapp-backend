@@ -16,12 +16,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
 
-      - run: npm install -g @composedb/cli@^0.4.0
-
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      
+
+      - run: npm install -g @composedb/cli@^0.4.0
+
       - name: generate js-scripts
         working-directory: js-scripts
         run: |
@@ -31,6 +31,8 @@ jobs:
       - name: setup ceramic private key
         id: ceramic-secret
         run: |
+          sudo apt install openssl
+          openssl rand -hex 32
           echo $(openssl rand -hex 32) >> "$CERAMIC_ADMIN_KEY"
           echo $(composedb did:from-private-key ${$CERAMIC_ADMIN_KEY}) >> "$CERAMIC_ADMIN_DID"
 
