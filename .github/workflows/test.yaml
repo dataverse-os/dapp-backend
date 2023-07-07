@@ -32,11 +32,12 @@ jobs:
           npm install -g @composedb/cli@^0.4.0
           export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
-          echo "CERAMIC_ADMIN_DID=$(composedb did:from-private-key ${$CERAMIC_ADMIN_KEY})" >> "$GITHUB_OUTPUT"
+          echo "CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY})" >> "$GITHUB_OUTPUT"
 
       - name: setup ceramic instance
         run: |
           npm install -g @ceramicnetwork/cli
+          mkdir -p ~/.ceramic
           envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
           ceramic daemon
         env:
