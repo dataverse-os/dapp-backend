@@ -31,8 +31,8 @@ jobs:
       - name: setup ceramic private key
         id: ceramic-secret
         run: |
-          echo (openssl rand -hex 32) >> "$CERAMIC_ADMIN_KEY"
-          echo (composedb did:from-private-key ${$CERAMIC_ADMIN_KEY}) >> "$CERAMIC_ADMIN_DID"
+          echo $(openssl rand -hex 32) >> "$CERAMIC_ADMIN_KEY"
+          echo $(composedb did:from-private-key ${$CERAMIC_ADMIN_KEY}) >> "$CERAMIC_ADMIN_DID"
 
       - name: setup ceramic instance
         run: |
