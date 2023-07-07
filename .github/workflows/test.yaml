@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ceramicnetwork/js-ceramic
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -32,18 +34,14 @@ jobs:
           npm install -g @composedb/cli@^0.4.0
           export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
-          mkdir -p  /home/runner/.ceramic
+          mkdir -p  ~/.ceramic
           CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY) \
           CERAMIC_NETWORK=inmemory \
-          envsubst < ./daemon.config.json > /home/runner/.ceramic/daemon.config.json
-          cat /home/runner/.ceramic/daemon.config.json
+          envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
+          cat ~/.ceramic/daemon.config.json
 
       - name: setup ceramic instance
-        uses: addnab/docker-run-action@v3
-        with:
-          image: ceramicnetwork/js-ceramic
-          options: -v /home/runner/.cearmic:/root/.ceramic -p 7007:7007
-          run: /js-ceramic/packages/cli/bin/ceramic.js daemon &
+        run: /js-ceramic/packages/cli/bin/ceramic.js daemon &
 
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
