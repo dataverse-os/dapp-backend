@@ -3,6 +3,7 @@ import { Composite } from "@composedb/devtools";
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import { getResolver } from "key-did-resolver";
+import { exit } from "process";
 import { fromString } from "uint8arrays/from-string";
 
 (async () => {
@@ -15,7 +16,12 @@ import { fromString } from "uint8arrays/from-string";
   await did.authenticate();
   const ceramic = new CeramicClient(input.ceramic!);
   ceramic.did = did;
-  const composite = await Composite.create({ ceramic, schema: input.schema! });
-  await composite.startIndexingOn(ceramic);
-  console.log(JSON.stringify(composite.toJSON()))
+  try {
+    const composite = await Composite.create({ ceramic, schema: input.schema! });
+    await composite.startIndexingOn(ceramic);
+    console.log(JSON.stringify(composite.toJSON()));
+  } catch (error) {
+    console.log((error as Error).toString().split("\n")[0]);
+    exit(1)
+  }
 })();

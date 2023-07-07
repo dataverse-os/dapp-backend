@@ -80,6 +80,7 @@ func (*NodeJSBinding) CreateComposite(ctx context.Context, schema string, cerami
 	cmd := exec.CommandContext(ctx, "node", tempDeployModelScript.Name(), buffer.String())
 	out, err := cmd.CombinedOutput()
 	if err != nil {
+		err = errors.New(string(out))
 		return
 	}
 	composite = strings.TrimSuffix(string(out), "\n")
