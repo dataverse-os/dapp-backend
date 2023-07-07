@@ -36,7 +36,7 @@ jobs:
 
       - name: setup ceramic instance
         run: |
-          npm install -g @ceramicnetwork/cli
+          npm install -g @ceramicnetwork/cli@2.31.0
           mkdir -p ~/.ceramic
           envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
           ceramic daemon &
