@@ -19,7 +19,7 @@ func validate(ctx *gin.Context) {
 }
 
 func deployDapp(ctx *gin.Context) {
-	var msg CreateMessage
+	var msg DeployMessage
 	if err := yaml.NewDecoder(ctx.Request.Body).Decode(&msg); err != nil {
 		ctx.AbortWithStatusJSON(400, err)
 		return
@@ -30,7 +30,7 @@ func deployDapp(ctx *gin.Context) {
 		Data:    make(map[string]ModelResult),
 	}
 	for _, v := range msg.Models {
-		_, streamID, err := ceramic.GenerateComposite(ctx, v.Schema)
+		_, streamID, err := ceramic.GenerateComposite(ctx, v.Schema, CeramicURL, CeramicAdminKey)
 		if err != nil {
 			resp.Message = err.Error()
 			break
@@ -55,7 +55,7 @@ func (r yamlRender) Render(w http.ResponseWriter) error {
 		return err
 	}
 
-	sig, err := verify.SignData(bytes, key)
+	sig, err := verify.SignData(bytes, ceramicAdminKey)
 	if err != nil {
 		return err
 	}

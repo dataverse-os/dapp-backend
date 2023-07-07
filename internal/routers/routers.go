@@ -2,6 +2,7 @@ package routers
 
 import (
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/dataverse-os/dapp-backend/verify"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-contrib/cors"
@@ -19,25 +21,29 @@ import (
 )
 
 var (
-	router *gin.Engine
-	key    *ecdsa.PrivateKey
-
-	ceramicURL *url.URL
+	router          *gin.Engine
+	CeramicAdminKey = os.Getenv("DID_PRIVATE_KEY")
+	ceramicAdminKey *ecdsa.PrivateKey
+	CeramicURL      = os.Getenv("CERAMIC_URL")
+	ceramicURL      *url.URL
 )
 
 func init() {
 	var err error
-	if ceramicURL, err = url.Parse(os.Getenv("CERAMIC_URL")); err != nil {
-		log.Fatalf("cannot parse env CERAMIC_URL '%s' as url", os.Getenv("CERAMIC_URL"))
+	if ceramicURL, err = url.Parse(CeramicURL); err != nil {
+		log.Fatalf("cannot parse env CERAMIC_URL '%s' as url", CeramicURL)
+	}
+
+	if ceramicAdminKey, err = crypto.HexToECDSA(CeramicAdminKey); err != nil {
+		log.Fatalln(err)
+	}
+
+	if err = ceramic.Default.CheckAdminAccess(context.Background(), CeramicURL, CeramicAdminKey); err != nil {
+		log.Fatalln(err)
 	}
 }
 
 func InitRouter() {
-	var err error
-	if key, err = crypto.HexToECDSA(os.Getenv("DID_PRIVATE_KEY")); err != nil {
-		log.Fatalln(err)
-	}
-
 	router = gin.Default()
 	router.Use(
 		cors.New(cors.Config{
@@ -95,7 +101,7 @@ func CheckMiddleware() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(400, err)
 			return
 		}
-		if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &key.PublicKey); err != nil {
+		if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &ceramicAdminKey.PublicKey); err != nil {
 			ctx.AbortWithStatusJSON(403, err)
 			return
 		}

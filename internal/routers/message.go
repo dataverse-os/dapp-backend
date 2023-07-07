@@ -1,6 +1,6 @@
 package routers
 
-type CreateMessage struct {
+type DeployMessage struct {
 	CeramicURL string  `yaml:"CeramicUrl"`
 	Models     []Model `yaml:"Models"`
 }

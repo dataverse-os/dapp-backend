@@ -18,6 +18,16 @@ jobs:
 
       - run: npm install -g @composedb/cli@^0.4.0
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      
+      - name: generate js-scripts
+        working-directory: js-scripts
+        run: |
+          npm install
+          npm run build
+
       - name: Run coverage
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
       - name: Upload coverage to Codecov
