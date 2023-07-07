@@ -35,14 +35,14 @@ jobs:
           mkdir -p /ceramic
           CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY) \
           CERAMIC_NETWORK=inmemory \
-          envsubst < ./daemon.config.json > /ceramic/daemon.config.json
-          cat ~/.ceramic/daemon.config.json
+          envsubst < ./daemon.config.json > /home/runner/.ceramic/daemon.config.json
+          cat /home/runner/.ceramic/daemon.config.json
 
       - name: setup ceramic instance
         uses: addnab/docker-run-action@v3
         with:
           image: ceramicnetwork/js-ceramic
-          options: -v /cearmic:/root/.ceramic -p 7007:7007
+          options: -v /home/runner/cearmic:/root/.ceramic -p 7007:7007
 
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
