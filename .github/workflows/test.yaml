@@ -12,11 +12,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ceramicnetwork/js-ceramic
+    # container: ceramicnetwork/js-ceramic
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
 
       - uses: actions/setup-node@v3
         with:
@@ -32,6 +31,7 @@ jobs:
         id: ceramic-secret
         run: |
           npm install -g @composedb/cli@^0.4.0
+          npm install -g @ceramicnetwork/cli@next
           export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
           mkdir -p  ~/.ceramic
@@ -41,7 +41,7 @@ jobs:
           cat ~/.ceramic/daemon.config.json
 
       - name: setup ceramic instance
-        run: /js-ceramic/packages/cli/bin/ceramic.js daemon &
+        run: ceramic daemon &
 
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
