@@ -32,7 +32,7 @@ jobs:
           npm install -g @composedb/cli@^0.4.0
           export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
-          mkdir -p /ceramic
+          mkdir -p  /home/runner/.ceramic
           CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY) \
           CERAMIC_NETWORK=inmemory \
           envsubst < ./daemon.config.json > /home/runner/.ceramic/daemon.config.json
@@ -42,7 +42,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ceramicnetwork/js-ceramic
-          options: -v /home/runner/cearmic:/root/.ceramic -p 7007:7007
+          options: -v /home/runner/.cearmic:/root/.ceramic -p 7007:7007
 
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
