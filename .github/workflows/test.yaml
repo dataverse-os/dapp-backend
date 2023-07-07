@@ -34,16 +34,20 @@ jobs:
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
           echo "CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY})" >> "$GITHUB_OUTPUT"
 
-      - name: setup ceramic instance
+      - name: setup ceramic config
         run: |
-          npm install -g @ceramicnetwork/cli@2.31.0
           mkdir -p ~/.ceramic
           envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
-          ceramic daemon &
         env:
-          CERAMIC_ADMIN_KEY: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_KEY }}
+          CERAMIC_ADMIN_DID: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_DID }}
           CERAMIC_NETWORK: inmemory
-      
+
+      - name: setup ceramic instance
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ceramicnetwork/js-ceramic
+          options: -v ~/.cearmic:~/.ceramic -p 7007:7007
+
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
 
