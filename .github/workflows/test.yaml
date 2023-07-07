@@ -20,8 +20,6 @@ jobs:
         with:
           node-version: 18
 
-      - run: npm install -g @composedb/cli@^0.4.0
-
       - name: generate js-scripts
         working-directory: js-scripts
         run: |
@@ -31,10 +29,10 @@ jobs:
       - name: setup ceramic private key
         id: ceramic-secret
         run: |
-          sudo apt install openssl
-          openssl rand -hex 32
-          echo $(openssl rand -hex 32) >> "$CERAMIC_ADMIN_KEY"
-          echo $(composedb did:from-private-key ${$CERAMIC_ADMIN_KEY}) >> "$CERAMIC_ADMIN_DID"
+          npm install -g @composedb/cli@^0.4.0
+          export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
+          echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
+          echo "CERAMIC_ADMIN_DID=$(composedb did:from-private-key ${$CERAMIC_ADMIN_KEY})" >> "$GITHUB_OUTPUT"
 
       - name: setup ceramic instance
         run: |
