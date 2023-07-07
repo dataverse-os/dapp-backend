@@ -3,11 +3,14 @@ GOBUILD = $(GOCMD) build
 GOMOD = $(GOCMD) mod
 GOTEST = $(GOCMD) test
 
-build:
+build: generate-js
 	go build -o dapp-backend.exe ./cmd/
 
 lint:
 	golangci-lint run --fix
+
+generate-js:
+	cd js-scripts && pnpm run build
 
 download:
 	echo Download go.mod dependencies

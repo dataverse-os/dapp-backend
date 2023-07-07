@@ -12,13 +12,51 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # container: ceramicnetwork/js-ceramic
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
 
-      - run: npm install -g @composedb/cli@^0.4.0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 7
+          run_install: false
+
+      - name: generate js-scripts
+        working-directory: js-scripts
+        run: |
+          pnpm install
+          pnpm run build
+
+      # - name: setup ceramic secret and config
+      #   id: ceramic-secret
+      #   run: |
+      #     pnpm install -g @composedb/cli@^0.4.0
+      #     pnpm install -g @ceramicnetwork/cli@next
+      #     export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
+      #     echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
+      #     mkdir -p  ~/.ceramic
+      #     CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY) \
+      #     CERAMIC_NETWORK=inmemory \
+      #     envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
+      #     cat ~/.ceramic/daemon.config.json
+
+      # - name: setup ceramic instance
+      #   run: ceramic daemon &
+
+      # - name: check ceramic instance status
+      #   run: curl http://localhost:7007/api/v0/node/healthcheck
 
       - name: Run coverage
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        # env:
+          # CERAMIC_URL: http://localhost:7007
+          # CERAMIC_ADMIN_KEY: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_KEY }}
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

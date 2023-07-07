@@ -2,7 +2,7 @@
   "anchor": {},
   "http-api": {
     "cors-allowed-origins": [".*"],
-    "admin-dids": ["Your Admin DID here"]
+    "admin-dids": ["${CERAMIC_ADMIN_DID}"]
   },
   "ipfs": {
     "mode": "bundled"
@@ -15,7 +15,7 @@
     "metrics-exporter-enabled": false
   },
   "network": {
-    "name": "testnet-clay"
+    "name": "${CERAMIC_NETWORK}"
   },
   "node": {},
   "state-store": {
