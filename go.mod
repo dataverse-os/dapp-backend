@@ -1,4 +1,4 @@
-module dapp-backend
+module github.com/dataverse-os/dapp-backend
 
 go 1.20
 

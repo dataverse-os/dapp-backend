@@ -1,11 +1,11 @@
 package main
 
 import (
-	"dapp-backend/ceramic"
-	"dapp-backend/internal/routers"
 	"log"
 	"os"
 
+	"github.com/dataverse-os/dapp-backend/ceramic"
+	"github.com/dataverse-os/dapp-backend/internal/routers"
 	"github.com/spf13/cobra"
 )
 

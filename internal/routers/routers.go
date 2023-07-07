@@ -3,7 +3,6 @@ package routers
 import (
 	"bytes"
 	"crypto/ecdsa"
-	"dapp-backend/verify"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dataverse-os/dapp-backend/verify"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,16 @@ import (
 var (
 	router *gin.Engine
 	key    *ecdsa.PrivateKey
+
+	ceramicURL *url.URL
 )
+
+func init() {
+	var err error
+	if ceramicURL, err = url.Parse(os.Getenv("CERAMIC_URL")); err != nil {
+		log.Fatalf("cannot parse env CERAMIC_URL '%s' as url", os.Getenv("CERAMIC_URL"))
+	}
+}
 
 func InitRouter() {
 	var err error
@@ -48,9 +57,8 @@ func InitRouter() {
 		}),
 	)
 	router.Any("/api/*path", func(ctx *gin.Context) {
-		u, _ := url.Parse(os.Getenv("CERAMIC_URL"))
-		ctx.Request.URL.Scheme = u.Scheme
-		ctx.Request.URL.Host = u.Host
+		ctx.Request.URL.Scheme = ceramicURL.Scheme
+		ctx.Request.URL.Host = ceramicURL.Host
 		req := httputil.NewSingleHostReverseProxy(ctx.Request.URL)
 		fmt.Println("send to: ", ctx.Request.URL)
 		req.ServeHTTP(ctx.Writer, ctx.Request)
@@ -59,8 +67,7 @@ func InitRouter() {
 	d := router.Group("/dataverse", checkWithNonce, CheckMiddleware())
 	{
 		d.POST("/validate", validate)
-		d.POST("/dapp", createDapp)
-		d.POST("/model", createModel)
+		d.POST("/dapp", deployDapp)
 	}
 }
 

@@ -3,12 +3,12 @@ package dapp
 import (
 	"bytes"
 	"context"
-	"dapp-backend/ceramic"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/tidwall/gjson"
 )
 

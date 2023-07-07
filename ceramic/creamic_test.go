@@ -3,9 +3,9 @@ package ceramic_test
 import (
 	"context"
 	"crypto/ecdsa"
-	"dapp-backend/ceramic"
 	"testing"
 
+	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 )

@@ -2,9 +2,9 @@ package verify_test
 
 import (
 	"crypto/ecdsa"
-	"dapp-backend/verify"
 	"testing"
 
+	"github.com/dataverse-os/dapp-backend/verify"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 )

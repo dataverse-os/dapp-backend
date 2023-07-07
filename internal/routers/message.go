@@ -1,24 +1,20 @@
 package routers
 
-type Operation string
-
-const (
-	OperationCreate            Operation = "I want to create a DataverseOS app."
-	OperationUpdate            Operation = "I want to update a DataverseOS app."
-	OperationSetExternalModels Operation = "I want to set external models to a DataverseOS app."
-)
-
 type CreateMessage struct {
-	Operation Operation `yaml:"Operation"`
-	Slug      string    `yaml:"Slug"`
-	Ceramic   *string   `yaml:"Ceramic"`
-	Models    []string  `yaml:"Models"`
+	CeramicURL string  `yaml:"CeramicUrl"`
+	Models     []Model `yaml:"Models"`
 }
 
-type SetExternalModelsMessage struct {
-	Operation Operation `yaml:"Operation"`
-	Slug      string    `yaml:"Slug"`
-	Schema    string    `yaml:"Schema"`
+type Model struct {
+	Schema         string
+	IsPublicDomain bool
+	Encryptable    []string
+}
+
+type ModelResult struct {
+	StreamID  string
+	ModelName string
+	Schema    string
 }
 
 type ResponseNonce[T any] struct {
