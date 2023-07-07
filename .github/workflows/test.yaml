@@ -43,7 +43,7 @@ jobs:
         with:
           image: ceramicnetwork/js-ceramic
           options: -v /home/runner/.cearmic:/root/.ceramic -p 7007:7007
-          run: /js-ceramic/packages/cli/bin/ceramic.js daemon
+          run: /js-ceramic/packages/cli/bin/ceramic.js daemon &
 
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
