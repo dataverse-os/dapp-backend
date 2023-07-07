@@ -2,10 +2,14 @@ package ceramic
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/samber/lo"
 )
 
 func TestNodeJSBinding_CheckSyntax(t *testing.T) {
@@ -69,8 +73,9 @@ func TestNodeJSBinding_GenerateDID(t *testing.T) {
 			name: "common",
 			args: args{
 				ctx: context.Background(),
-				key: os.Getenv("CERAMIC_ADMIN_KEY"),
+				key: "61c5ed6b2a619e21d7d0d0a9b9a591e4c0f014c3f25eb1d26c1b53332f96afe5",
 			},
+			wantDid: "did:key:z6MkjSnks3PuMFQhJHS6NfwD3tHfkx6sSGxHjzAQhN113rZj",
 			wantErr: false,
 		},
 	}
@@ -90,6 +95,9 @@ func TestNodeJSBinding_GenerateDID(t *testing.T) {
 }
 
 func TestNodeJSBinding_CheckAdminAccess(t *testing.T) {
+	if os.Getenv("CERAMIC_URL") == "" || os.Getenv("CERAMIC_ADMIN_KEY") == "" {
+		t.Skip("skip case without ceramic secret")
+	}
 	type args struct {
 		ctx     context.Context
 		ceramic string
@@ -115,7 +123,8 @@ func TestNodeJSBinding_CheckAdminAccess(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				ceramic: os.Getenv("CERAMIC_URL"),
-				key:     "6e916d013617da57428fa2072ae2c38114b7fc6552010cb5daa03d0f83cbafe611f47be01c16d6549d165be31e908b10bf35ee1052893ba5fec4824c6570c5ec",
+				// random generated key
+				key: hex.EncodeToString(crypto.FromECDSA(lo.Must(crypto.GenerateKey()))),
 			},
 			wantErr: true,
 		},
@@ -131,6 +140,9 @@ func TestNodeJSBinding_CheckAdminAccess(t *testing.T) {
 }
 
 func TestNodeJSBinding_CreateComposite(t *testing.T) {
+	if os.Getenv("CERAMIC_URL") == "" || os.Getenv("CERAMIC_ADMIN_KEY") == "" {
+		t.Skip("skip case without ceramic secret")
+	}
 	type args struct {
 		ctx     context.Context
 		schema  string
