@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 16
 
       - name: generate js-scripts
         working-directory: js-scripts
@@ -39,7 +39,7 @@ jobs:
           npm install -g @ceramicnetwork/cli
           mkdir -p ~/.ceramic
           envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
-          ceramic daemon
+          ceramic daemon &
         env:
           CERAMIC_ADMIN_KEY: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_KEY }}
           CERAMIC_NETWORK: inmemory
