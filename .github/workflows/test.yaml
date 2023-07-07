@@ -26,27 +26,22 @@ jobs:
           npm install
           npm run build
 
-      - name: setup ceramic private key
+      - name: setup ceramic secret and config
         id: ceramic-secret
         run: |
           npm install -g @composedb/cli@^0.4.0
           export CERAMIC_ADMIN_KEY=$(openssl rand -hex 32)
           echo "CERAMIC_ADMIN_KEY=$CERAMIC_ADMIN_KEY" >> "$GITHUB_OUTPUT"
-          echo "CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY})" >> "$GITHUB_OUTPUT"
-
-      - name: setup ceramic config
-        run: |
           mkdir -p ~/.ceramic
+          CERAMIC_ADMIN_DID=$(composedb did:from-private-key $CERAMIC_ADMIN_KEY}) \
+          CERAMIC_NETWORK=inmemory \
           envsubst < ./daemon.config.json > ~/.ceramic/daemon.config.json
-        env:
-          CERAMIC_ADMIN_DID: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_DID }}
-          CERAMIC_NETWORK: inmemory
 
       - name: setup ceramic instance
         uses: addnab/docker-run-action@v3
         with:
           image: ceramicnetwork/js-ceramic
-          options: -v ~/.cearmic:~/.ceramic -p 7007:7007
+          options: -v ~/.cearmic:/root/.ceramic -p 7007:7007
 
       - name: check ceramic instance status
         run: curl http://localhost:7007/api/v0/node/healthcheck
