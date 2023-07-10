@@ -96,7 +96,7 @@ func TestSchemaModifyFn(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		wantResult []byte
+		wantResult string
 		args       args
 		wantErr    bool
 	}{
@@ -111,7 +111,7 @@ func TestSchemaModifyFn(t *testing.T) {
 					return fmt.Sprintf("prefix | %s", old)
 				},
 			},
-			wantResult: []byte(`type prefix_temp @createModel(accountRelation: SINGLE, description: "prefix | desp here") {}`),
+			wantResult: `type prefix_temp @createModel(accountRelation: SINGLE, description: "prefix | desp here") {}`,
 			wantErr:    false,
 		},
 	}

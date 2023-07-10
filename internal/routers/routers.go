@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ecdsa"
-	"fmt"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -66,7 +66,6 @@ func InitRouter() {
 		ctx.Request.URL.Scheme = ceramicURL.Scheme
 		ctx.Request.URL.Host = ceramicURL.Host
 		req := httputil.NewSingleHostReverseProxy(ctx.Request.URL)
-		fmt.Println("send to: ", ctx.Request.URL)
 		req.ServeHTTP(ctx.Writer, ctx.Request)
 		ctx.Abort()
 	})
@@ -86,7 +85,7 @@ func Start() {
 func checkWithNonce(ctx *gin.Context) {
 	nonce := ctx.GetHeader("dataverse-nonce")
 	if nonce == "" {
-		ctx.AbortWithStatusJSON(400, fmt.Errorf("invalid nonce"))
+		ResponseError(ctx, errors.New("invalid nonce"), 400)
 		return
 	}
 }
@@ -98,11 +97,11 @@ func CheckMiddleware() gin.HandlerFunc {
 			err  error
 		)
 		if _, err = io.Copy(&data, ctx.Request.Body); err != nil {
-			ctx.AbortWithStatusJSON(400, err)
+			ResponseError(ctx, err, 400)
 			return
 		}
 		if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &ceramicAdminKey.PublicKey); err != nil {
-			ctx.AbortWithStatusJSON(403, err)
+			ResponseError(ctx, err, 403)
 			return
 		}
 		ctx.Request.Body = io.NopCloser(&data)

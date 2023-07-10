@@ -6,7 +6,7 @@ import (
 
 var Default = &NodeJSBinding{}
 
-func GenerateComposite(ctx context.Context, schema string, url string, key string) (composite string, streamID string, err error) {
+func DeployStreamModel(ctx context.Context, schema string, url string, key string) (composite string, streamID string, err error) {
 	if composite, err = Default.CreateComposite(ctx, schema, url, key); err != nil {
 		return
 	}

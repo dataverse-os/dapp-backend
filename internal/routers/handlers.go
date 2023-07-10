@@ -3,10 +3,11 @@ package routers
 import (
 	"net/http"
 
-	"github.com/dataverse-os/dapp-backend/ceramic"
+	"github.com/dataverse-os/dapp-backend/internal/dapp"
 	"github.com/dataverse-os/dapp-backend/verify"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,26 +20,28 @@ func validate(ctx *gin.Context) {
 }
 
 func deployDapp(ctx *gin.Context) {
-	var msg DeployMessage
+	var (
+		msg dapp.DeployMessage
+		id  uuid.UUID
+		err error
+	)
+	defer func() {
+		if err != nil {
+			ResponseError(ctx, err, 400)
+		}
+	}()
 	if err := yaml.NewDecoder(ctx.Request.Body).Decode(&msg); err != nil {
-		ctx.AbortWithStatusJSON(400, err)
 		return
 	}
-	resp := ResponseNonce[map[string]ModelResult]{
+	if id, err = uuid.Parse(ctx.GetHeader("dataverse-dapp-id")); err != nil {
+		return
+	}
+	resp := ResponseNonce[[]dapp.ModelResult]{
 		Message: "Success",
 		Nonce:   ctx.GetHeader("dataverse-nonce"),
-		Data:    make(map[string]ModelResult),
 	}
-	for _, v := range msg.Models {
-		_, streamID, err := ceramic.GenerateComposite(ctx, v.Schema, CeramicURL, CeramicAdminKey)
-		if err != nil {
-			resp.Message = err.Error()
-			break
-		}
-		resp.Data[streamID] = ModelResult{
-			StreamID: streamID,
-			Schema:   v.Schema,
-		}
+	if resp.Data, err = dapp.DeployStreamModels(ctx, id, msg.Models, CeramicURL, CeramicAdminKey); err != nil {
+		return
 	}
 	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
 }

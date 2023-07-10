@@ -14,7 +14,6 @@
   "devDependencies": {
     "@ceramicnetwork/http-client": "^2.23.0",
     "@composedb/devtools": "^0.4.4",
-    "@composedb/devtools-node": "^0.4.4",
     "@composedb/types": "^0.4.4",
     "@types/node": "^18.16.19",
     "esbuild": "^0.17.19",
@@ -22,9 +21,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@composedb/client": "^0.4.4",
     "dids": "^4.0.3",
-    "graphql": "^16.7.1",
     "key-did-provider-ed25519": "^3.0.1",
     "key-did-resolver": "^3.0.0",
     "uint8arrays": "^4.0.4"
