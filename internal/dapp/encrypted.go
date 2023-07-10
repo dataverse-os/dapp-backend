@@ -63,7 +63,7 @@ var EncryptedField = ast.FieldDefinition{
 }
 
 func CheckEncryptable(schema StreamModel) (err error) {
-	if schema.Encryptable != nil && schema.IsPublicDomain {
+	if schema.Encryptable != nil && len(schema.Encryptable) != 0 && schema.IsPublicDomain {
 		err = errors.New("input model is public but want encrypt fields")
 		return
 	}

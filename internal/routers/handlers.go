@@ -30,7 +30,7 @@ func deployDapp(ctx *gin.Context) {
 			ResponseError(ctx, err, 400)
 		}
 	}()
-	if err := yaml.NewDecoder(ctx.Request.Body).Decode(&msg); err != nil {
+	if err = yaml.NewDecoder(ctx.Request.Body).Decode(&msg); err != nil {
 		return
 	}
 	if id, err = uuid.Parse(ctx.GetHeader("dataverse-dapp-id")); err != nil {

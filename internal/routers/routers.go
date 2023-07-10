@@ -35,11 +35,11 @@ func init() {
 	}
 
 	if ceramicAdminKey, err = crypto.HexToECDSA(CeramicAdminKey); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed to parse ceramic admin key with error: %s", err)
 	}
 
 	if err = ceramic.Default.CheckAdminAccess(context.Background(), CeramicURL, CeramicAdminKey); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("failed to parse ceramic url with error: %s", err)
 	}
 }
 
