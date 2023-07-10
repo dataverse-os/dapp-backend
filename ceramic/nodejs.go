@@ -18,10 +18,11 @@ var _ ClientInterface = (*NodeJSBinding)(nil)
 type NodeJSBinding struct{}
 
 var (
-	tempCheckSyntaxScript *os.File
-	tempDeployModelScript *os.File
-	tempGenerateDIDScript *os.File
-	tempAdminAccessScript *os.File
+	tempCheckSyntaxScript   *os.File
+	tempDeployModelScript   *os.File
+	tempGenerateDIDScript   *os.File
+	tempAdminAccessScript   *os.File
+	tempIndexedModelsScript *os.File
 )
 
 func init() {
@@ -36,6 +37,9 @@ func init() {
 		log.Panicln(err)
 	}
 	if tempAdminAccessScript, err = initFile(jsscripts.AdminAccess); err != nil {
+		log.Panicln(err)
+	}
+	if tempIndexedModelsScript, err = initFile(jsscripts.IndexedModels); err != nil {
 		log.Panicln(err)
 	}
 }
@@ -113,6 +117,30 @@ func (*NodeJSBinding) CheckAdminAccess(ctx context.Context, ceramic string, key 
 	}
 	if bytes.HasPrefix(out, []byte("Error")) {
 		err = errors.New(strings.TrimSuffix(string(out), "\n"))
+	}
+	return
+}
+
+func (*NodeJSBinding) GetIndexedModels(ctx context.Context, ceramic string, key string) (streamIDs []string, err error) {
+	data := map[string]any{
+		"ceramic": ceramic,
+		"key":     key,
+	}
+	var buffer bytes.Buffer
+	if err = json.NewEncoder(&buffer).Encode(data); err != nil {
+		return
+	}
+	cmd := exec.CommandContext(ctx, "node", tempIndexedModelsScript.Name(), buffer.String())
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return
+	}
+	if bytes.HasPrefix(out, []byte("Error")) {
+		err = errors.New(strings.TrimSuffix(string(out), "\n"))
+		return
+	}
+	if err = json.NewDecoder(bytes.NewBuffer(out)).Decode(&streamIDs); err != nil {
+		return
 	}
 	return
 }

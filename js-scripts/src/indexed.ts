@@ -1,5 +1,4 @@
 import { CeramicClient } from "@ceramicnetwork/http-client";
-import { Composite } from "@composedb/devtools";
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import { getResolver } from "key-did-resolver";
@@ -17,8 +16,8 @@ import { fromString } from "uint8arrays/from-string";
   const ceramic = new CeramicClient(input.ceramic!);
   ceramic.did = did;
   try {
-    const composite = await Composite.create({ ceramic, schema: input.schema!, index: true});
-    console.log(JSON.stringify(composite.toJSON()));
+    const indexedModels = (await ceramic.admin.getIndexedModels()).map(m => m.toString());
+    console.log(JSON.stringify(indexedModels));
   } catch (error) {
     console.log((error as Error).toString().split("\n")[0]);
     exit(1)
