@@ -7,7 +7,7 @@ on:
     paths-ignore:
       - "**.md"
       - "**.txt"
-  # pull_request:
+  pull_request:
 
 env:
   CONTAINER: dapp-backend
