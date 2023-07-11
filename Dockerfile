@@ -13,7 +13,7 @@ ENV CGO_ENABLED 1
 WORKDIR /build
 
 COPY . /build
-COPY --from=builder-node /build-js/dist /build/js-scripts
+COPY --from=builder-node /build-js/dist /build/js-scripts/dist
 RUN go mod download
 RUN go build -ldflags="-s -w" -o /app/dapp-backend.exe /build/cmd/
 
