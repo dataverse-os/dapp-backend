@@ -13,6 +13,6 @@ var (
 	GenerateDID string
 	//go:embed dist/admin-access.js
 	AdminAccess string
-	//go:embed dist/indexed.js
+	//go:embed dist/indexed-models.js
 	IndexedModels string
 )

@@ -21,4 +21,5 @@ type ClientInterface interface {
 	CheckSyntax(ctx context.Context, schema string) (err error)
 	GenerateDID(ctx context.Context, key string) (did string, err error)
 	CheckAdminAccess(ctx context.Context, ceramic string, key string) (err error)
+	GetIndexedModels(ctx context.Context, ceramic string, key string) (streamIDs []string, err error)
 }
