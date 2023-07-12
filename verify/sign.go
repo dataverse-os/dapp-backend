@@ -21,7 +21,7 @@ func CheckSign(data []byte, sig string, key *ecdsa.PublicKey) error {
 	return nil
 }
 
-func ExportPublicKey(origin string, signed string) (hexKey string, err error) {
+func ExportPublicKeyHex(origin string, signed string) (hexKey string, err error) {
 	signature := hexutil.MustDecode(signed)
 	signature[64] -= 27
 	keyFromSig, err := crypto.SigToPub(accounts.TextHash([]byte(origin)), signature)
@@ -29,6 +29,16 @@ func ExportPublicKey(origin string, signed string) (hexKey string, err error) {
 		return
 	}
 	hexKey = crypto.PubkeyToAddress(*keyFromSig).Hex()
+	return
+}
+
+func ExportPublicKey(origin string, signed string) (keyFromSig *ecdsa.PublicKey, err error) {
+	signature := hexutil.MustDecode(signed)
+	signature[64] -= 27
+	keyFromSig, err = crypto.SigToPub(accounts.TextHash([]byte(origin)), signature)
+	if err != nil {
+		return
+	}
 	return
 }
 

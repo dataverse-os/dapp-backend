@@ -99,9 +99,8 @@ func TestNodeJSBinding_CheckAdminAccess(t *testing.T) {
 		t.Skip("skip case without ceramic secret")
 	}
 	type args struct {
-		ctx     context.Context
-		ceramic string
-		key     string
+		ctx  context.Context
+		sess Session
 	}
 	tests := []struct {
 		name    string
@@ -112,19 +111,23 @@ func TestNodeJSBinding_CheckAdminAccess(t *testing.T) {
 		{
 			name: "common",
 			args: args{
-				ctx:     context.Background(),
-				ceramic: os.Getenv("CERAMIC_URL"),
-				key:     os.Getenv("CERAMIC_ADMIN_KEY"),
+				ctx: context.Background(),
+				sess: Session{
+					URLString:      os.Getenv("CERAMIC_URL"),
+					AdminKeyString: os.Getenv("CERAMIC_ADMIN_KEY"),
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "common error",
 			args: args{
-				ctx:     context.Background(),
-				ceramic: os.Getenv("CERAMIC_URL"),
-				// random generated key
-				key: hex.EncodeToString(crypto.FromECDSA(lo.Must(crypto.GenerateKey()))),
+				ctx: context.Background(),
+				sess: Session{
+					URLString: os.Getenv("CERAMIC_URL"),
+					// random generated key
+					AdminKeyString: hex.EncodeToString(crypto.FromECDSA(lo.Must(crypto.GenerateKey()))),
+				},
 			},
 			wantErr: true,
 		},
@@ -132,7 +135,7 @@ func TestNodeJSBinding_CheckAdminAccess(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &NodeJSBinding{}
-			if err := n.CheckAdminAccess(tt.args.ctx, tt.args.ceramic, tt.args.key); (err != nil) != tt.wantErr {
+			if err := n.CheckAdminAccess(tt.args.ctx, tt.args.sess); (err != nil) != tt.wantErr {
 				t.Errorf("NodeJSBinding.CheckAdminAccess() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -144,10 +147,9 @@ func TestNodeJSBinding_CreateComposite(t *testing.T) {
 		t.Skip("skip case without ceramic secret")
 	}
 	type args struct {
-		ctx     context.Context
-		schema  string
-		ceramic string
-		key     string
+		ctx    context.Context
+		schema string
+		sess   Session
 	}
 	tests := []struct {
 		name    string
@@ -163,8 +165,10 @@ func TestNodeJSBinding_CreateComposite(t *testing.T) {
 				schema: `type testSchema1 @createModel(accountRelation: LIST, description: "ContentFolder") {
 	author: DID! @documentAccount
   }`,
-				ceramic: os.Getenv("CERAMIC_URL"),
-				key:     os.Getenv("CERAMIC_ADMIN_KEY"),
+				sess: Session{
+					URLString:      os.Getenv("CERAMIC_URL"),
+					AdminKeyString: os.Getenv("CERAMIC_ADMIN_KEY"),
+				},
 			},
 			wantErr: false,
 		},
@@ -176,8 +180,10 @@ func TestNodeJSBinding_CreateComposite(t *testing.T) {
 				schema: `type testSchema2 @111createModel(accountRelation: LIST, description: "ContentFolder") {
 	author: DID! @documentAccount
   }`,
-				ceramic: os.Getenv("CERAMIC_URL"),
-				key:     os.Getenv("CERAMIC_ADMIN_KEY"),
+				sess: Session{
+					URLString:      os.Getenv("CERAMIC_URL"),
+					AdminKeyString: os.Getenv("CERAMIC_ADMIN_KEY"),
+				},
 			},
 			wantErr: true,
 		},
@@ -185,7 +191,7 @@ func TestNodeJSBinding_CreateComposite(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &NodeJSBinding{}
-			gotComposite, err := n.CreateComposite(tt.args.ctx, tt.args.schema, tt.args.ceramic, tt.args.key)
+			gotComposite, err := n.CreateComposite(tt.args.ctx, tt.args.schema, tt.args.sess)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodeJSBinding.CreateComposite() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -202,9 +208,8 @@ func TestNodeJSBinding_GetIndexedModels(t *testing.T) {
 		t.Skip("skip case without ceramic secret")
 	}
 	type args struct {
-		ctx     context.Context
-		ceramic string
-		key     string
+		ctx  context.Context
+		sess Session
 	}
 	tests := []struct {
 		name    string
@@ -216,9 +221,11 @@ func TestNodeJSBinding_GetIndexedModels(t *testing.T) {
 			name: "common",
 			n:    &NodeJSBinding{},
 			args: args{
-				ctx:     context.Background(),
-				ceramic: os.Getenv("CERAMIC_URL"),
-				key:     os.Getenv("CERAMIC_ADMIN_KEY"),
+				ctx: context.Background(),
+				sess: Session{
+					URLString:      os.Getenv("CERAMIC_URL"),
+					AdminKeyString: os.Getenv("CERAMIC_ADMIN_KEY"),
+				},
 			},
 			wantErr: false,
 		},
@@ -226,7 +233,7 @@ func TestNodeJSBinding_GetIndexedModels(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &NodeJSBinding{}
-			gotStreamIDs, err := n.GetIndexedModels(tt.args.ctx, tt.args.ceramic, tt.args.key)
+			gotStreamIDs, err := n.GetIndexedModels(tt.args.ctx, tt.args.sess)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodeJSBinding.GetIndexedModels() error = %v, wantErr %v", err, tt.wantErr)
 				return

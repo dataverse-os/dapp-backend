@@ -71,11 +71,11 @@ func (*NodeJSBinding) CheckSyntax(ctx context.Context, schema string) (err error
 	return
 }
 
-func (*NodeJSBinding) CreateComposite(ctx context.Context, schema string, ceramic string, key string) (composite string, err error) {
+func (*NodeJSBinding) CreateComposite(ctx context.Context, schema string, sess Session) (composite string, err error) {
 	data := map[string]any{
 		"schema":  schema,
-		"ceramic": ceramic,
-		"key":     key,
+		"ceramic": sess.URLString,
+		"key":     sess.AdminKeyString,
 	}
 	var buffer bytes.Buffer
 	if err = json.NewEncoder(&buffer).Encode(data); err != nil {
@@ -101,10 +101,10 @@ func (*NodeJSBinding) GenerateDID(ctx context.Context, key string) (did string, 
 	return
 }
 
-func (*NodeJSBinding) CheckAdminAccess(ctx context.Context, ceramic string, key string) (err error) {
+func (*NodeJSBinding) CheckAdminAccess(ctx context.Context, sess Session) (err error) {
 	data := map[string]any{
-		"ceramic": ceramic,
-		"key":     key,
+		"ceramic": sess.URLString,
+		"key":     sess.AdminKeyString,
 	}
 	var buffer bytes.Buffer
 	if err = json.NewEncoder(&buffer).Encode(data); err != nil {
@@ -121,10 +121,10 @@ func (*NodeJSBinding) CheckAdminAccess(ctx context.Context, ceramic string, key 
 	return
 }
 
-func (*NodeJSBinding) GetIndexedModels(ctx context.Context, ceramic string, key string) (streamIDs []string, err error) {
+func (*NodeJSBinding) GetIndexedModels(ctx context.Context, sess Session) (streamIDs []string, err error) {
 	data := map[string]any{
-		"ceramic": ceramic,
-		"key":     key,
+		"ceramic": sess.URLString,
+		"key":     sess.AdminKeyString,
 	}
 	var buffer bytes.Buffer
 	if err = json.NewEncoder(&buffer).Encode(data); err != nil {

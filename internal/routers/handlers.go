@@ -41,7 +41,7 @@ func deployDapp(ctx *gin.Context) {
 		Message: "Success",
 		Nonce:   ctx.GetHeader("dataverse-nonce"),
 	}
-	if resp.Data, err = dapp.DeployStreamModels(ctx, id, msg.Models, CeramicURL, CeramicAdminKey); err != nil {
+	if resp.Data, err = dapp.DeployStreamModels(ctx, id, msg.Models, dapp.CeramicSession); err != nil {
 		return
 	}
 	ctx.Render(200, yamlRender{render.YAML{Data: resp}})
@@ -59,7 +59,7 @@ func (r yamlRender) Render(w http.ResponseWriter) error {
 		return err
 	}
 
-	sig, err := verify.SignData(bytes, ceramicAdminKey)
+	sig, err := verify.SignData(bytes, dapp.CeramicSession.AdminKey)
 	if err != nil {
 		return err
 	}
@@ -73,9 +73,9 @@ func CeramicProxy(ctx *gin.Context) {
 	proxy := &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.Out.Header = r.In.Header
-			r.Out.Host = ceramicURL.Host
-			r.Out.URL.Host = ceramicURL.Host
-			r.Out.URL.Scheme = ceramicURL.Scheme
+			r.Out.Host = dapp.CeramicSession.URL.Host
+			r.Out.URL.Host = dapp.CeramicSession.URL.Host
+			r.Out.URL.Scheme = dapp.CeramicSession.URL.Scheme
 		},
 	}
 	proxy.ServeHTTP(ctx.Writer, ctx.Request)

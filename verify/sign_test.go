@@ -62,7 +62,7 @@ func TestCheckSignWithHexPublicKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHexKey, err := verify.ExportPublicKey(tt.args.origin, tt.args.signed)
+			gotHexKey, err := verify.ExportPublicKeyHex(tt.args.origin, tt.args.signed)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckSignWithHexPublicKey() error = %v, wantErr %v", err, tt.wantErr)
 				return

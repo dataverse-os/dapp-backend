@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func DeployStreamModels(ctx context.Context, id uuid.UUID, schemas []StreamModel, ceramicURL, key string) (result []ModelResult, err error) {
+func DeployStreamModels(ctx context.Context, id uuid.UUID, schemas []StreamModel, sess ceramic.Session) (result []ModelResult, err error) {
 	result = make([]ModelResult, len(schemas))
 	for i := range schemas {
 		if err = CheckEncryptable(schemas[i]); err != nil {
@@ -27,7 +27,7 @@ func DeployStreamModels(ctx context.Context, id uuid.UUID, schemas []StreamModel
 			return
 		}
 		// deploy modified model to ceramic node
-		if _, result[i].StreamID, err = ceramic.DeployStreamModel(context.Background(), schemas[i].Schema, ceramicURL, key); err != nil {
+		if _, result[i].StreamID, err = ceramic.DeployStreamModel(context.Background(), schemas[i].Schema, sess); err != nil {
 			return
 		}
 		result[i].Schema = schemas[i].Schema
