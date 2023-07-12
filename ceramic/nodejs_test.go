@@ -196,3 +196,45 @@ func TestNodeJSBinding_CreateComposite(t *testing.T) {
 		})
 	}
 }
+
+func TestNodeJSBinding_GetIndexedModels(t *testing.T) {
+	if os.Getenv("CERAMIC_URL") == "" || os.Getenv("CERAMIC_ADMIN_KEY") == "" {
+		t.Skip("skip case without ceramic secret")
+	}
+	type args struct {
+		ctx     context.Context
+		ceramic string
+		key     string
+	}
+	tests := []struct {
+		name    string
+		n       *NodeJSBinding
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "common",
+			n:    &NodeJSBinding{},
+			args: args{
+				ctx:     context.Background(),
+				ceramic: os.Getenv("CERAMIC_URL"),
+				key:     os.Getenv("CERAMIC_ADMIN_KEY"),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := &NodeJSBinding{}
+			gotStreamIDs, err := n.GetIndexedModels(tt.args.ctx, tt.args.ceramic, tt.args.key)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NodeJSBinding.GetIndexedModels() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(gotStreamIDs) == 0 {
+				t.Errorf("NodeJSBinding.GetIndexedModels() got empty indexed models, got: %s", gotStreamIDs)
+				return
+			}
+		})
+	}
+}

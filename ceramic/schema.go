@@ -64,7 +64,7 @@ func FormatSchema(src []byte) (string, error) {
 }
 
 // for single model only
-func SchemaModifyFn(body []byte, nameMod, despMod func(old string) string) (result []byte, err error) {
+func SchemaModifyFn(body []byte, nameMod, despMod func(old string) string) (result string, err error) {
 	var obj *ast.ObjectDefinition
 	if obj, err = ExtarctSingleObject(body); err != nil {
 		return
@@ -77,11 +77,11 @@ func SchemaModifyFn(body []byte, nameMod, despMod func(old string) string) (resu
 			}
 		}
 	}
-	result = []byte(printer.Print(obj).(string))
+	result = printer.Print(obj).(string)
 	return
 }
 
-func AddCustomField(body []byte, field *ast.FieldDefinition) (result []byte, err error) {
+func AddCustomField(body []byte, field *ast.FieldDefinition) (result string, err error) {
 	var obj *ast.ObjectDefinition
 	if obj, err = ExtarctSingleObject(body); err != nil {
 		return
@@ -93,6 +93,6 @@ func AddCustomField(body []byte, field *ast.FieldDefinition) (result []byte, err
 		}
 	}
 	obj.Fields = append(obj.Fields, field)
-	result = []byte(printer.Print(obj).(string))
+	result = printer.Print(obj).(string)
 	return
 }
