@@ -3,6 +3,7 @@ package routers
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/dataverse-os/dapp-backend/internal/dapp"
 	"github.com/dataverse-os/dapp-backend/verify"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -38,10 +40,12 @@ func InitRouter() {
 		}),
 	)
 	router.Any("/api/*path", CeramicProxy)
-	d := router.Group("/dataverse", checkWithNonce, CheckMiddleware())
+	d := router.Group("/dataverse")
 	{
-		d.POST("/validate", validate)
-		d.POST("/dapp", deployDapp)
+		d.POST("/validate", checkWithNonce, CheckMiddleware(), validate)
+		d.POST("/dapp", checkWithNonce, CheckMiddleware(), deployDapp)
+		d.GET("/model-version", GetModelVersion)
+		d.POST("/model-version", HeaderChecker("dataverse-sig"), SignatureMiddleware, PostUpdateModelVersion)
 	}
 }
 
@@ -75,4 +79,40 @@ func CheckMiddleware() gin.HandlerFunc {
 		}
 		ctx.Request.Body = io.NopCloser(&data)
 	}
+}
+
+func HeaderChecker(headers ...string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		for _, v := range headers {
+			if ctx.GetHeader(v) == "" {
+				ctx.AbortWithStatusJSON(400, &gin.H{
+					"msg": fmt.Sprintf("should contain header: %s", v),
+				})
+				return
+			}
+		}
+	}
+}
+
+func SignatureMiddleware(ctx *gin.Context) {
+	var (
+		data            bytes.Buffer
+		signatureString = ctx.GetHeader("dataverse-sig")
+		address         common.Address
+		err             error
+	)
+	if signatureString == "" {
+		return
+	}
+	if _, err = io.Copy(&data, ctx.Request.Body); err != nil {
+		ResponseError(ctx, err, 400)
+		return
+	}
+	if address, err = verify.ExportAddress(data.Bytes(), signatureString); err != nil {
+		ResponseError(ctx, err, 400)
+		return
+	} else {
+		ctx.Set("DATAVERSE_ADDRESS", address)
+	}
+	ctx.Request.Body = io.NopCloser(&data)
 }

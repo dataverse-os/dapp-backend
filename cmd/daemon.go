@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/dataverse-os/dapp-backend/ceramic"
+	"github.com/dataverse-os/dapp-backend/internal/dapp"
 	"github.com/dataverse-os/dapp-backend/internal/routers"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,8 @@ var daemonCmd = &cobra.Command{
 			ceramic.GenerateKey()
 			return
 		} else {
+			dapp.InitCeramicSession()
+			dapp.InitBolt()
 			routers.InitRouter()
 			routers.Start()
 		}

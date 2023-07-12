@@ -1,7 +1,6 @@
 package dapp
 
 import (
-	"context"
 	"log"
 	"os"
 
@@ -17,7 +16,9 @@ func InitCeramicSession() {
 	if CeramicSession, err = ceramic.NewSession(os.Getenv("CERAMIC_URL"), os.Getenv("DID_PRIVATE_KEY")); err != nil {
 		log.Fatalln(err)
 	}
-	if err = ceramic.Default.CheckAdminAccess(context.Background(), CeramicSession); err != nil {
-		log.Fatalf("failed to parse ceramic url with error: %s", err)
-	}
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	// defer cancel()
+	// if err = ceramic.Default.CheckAdminAccess(ctx, CeramicSession); err != nil {
+	// 	log.Fatalf("failed to parse ceramic url with error: %s", err)
+	// }
 }

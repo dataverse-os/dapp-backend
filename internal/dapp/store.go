@@ -2,12 +2,11 @@ package dapp
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/binary"
 	"log"
 
 	"github.com/dataverse-os/dapp-backend/ceramic"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/common"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -50,10 +49,10 @@ func InitBolt() {
 	}
 }
 
-func LookupUserModelVersion(pubKey *ecdsa.PublicKey, modelName string) (version int64, err error) {
+func LookupUserModelVersion(address common.Address, modelName string) (version int64, err error) {
 	if err = BoltDB.View(func(tx *bolt.Tx) error {
 		result := tx.Bucket(bucketModelVersion).Get(
-			append(crypto.PubkeyToAddress(*pubKey).Bytes(),
+			append(address.Bytes(),
 				[]byte(modelName)...,
 			),
 		)
@@ -69,13 +68,13 @@ func LookupUserModelVersion(pubKey *ecdsa.PublicKey, modelName string) (version 
 	return
 }
 
-func UpdateUserModelVersion(pubKey *ecdsa.PublicKey, modelName string, version uint64) (err error) {
+func UpdateUserModelVersion(address common.Address, modelName string, version uint64) (err error) {
 	if err = BoltDB.Update(func(tx *bolt.Tx) error {
 		var versionBinary []byte = make([]byte, 8)
 		binary.BigEndian.PutUint64(versionBinary, version)
 		return tx.Bucket(bucketModelVersion).Put(
 			append(
-				crypto.PubkeyToAddress(*pubKey).Bytes(),
+				address.Bytes(),
 				[]byte(modelName)...,
 			),
 			versionBinary,

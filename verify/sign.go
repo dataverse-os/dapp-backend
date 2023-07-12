@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -21,24 +22,31 @@ func CheckSign(data []byte, sig string, key *ecdsa.PublicKey) error {
 	return nil
 }
 
-func ExportPublicKeyHex(origin string, signed string) (hexKey string, err error) {
-	signature := hexutil.MustDecode(signed)
+func ExportPublicKey(origin []byte, signatureString string) (keyFromSig *ecdsa.PublicKey, err error) {
+	signature := hexutil.MustDecode(signatureString)
 	signature[64] -= 27
-	keyFromSig, err := crypto.SigToPub(accounts.TextHash([]byte(origin)), signature)
+	keyFromSig, err = crypto.SigToPub(accounts.TextHash(origin), signature)
 	if err != nil {
 		return
 	}
-	hexKey = crypto.PubkeyToAddress(*keyFromSig).Hex()
 	return
 }
 
-func ExportPublicKey(origin string, signed string) (keyFromSig *ecdsa.PublicKey, err error) {
-	signature := hexutil.MustDecode(signed)
-	signature[64] -= 27
-	keyFromSig, err = crypto.SigToPub(accounts.TextHash([]byte(origin)), signature)
+func ExportAddress(origin []byte, signatureString string) (address common.Address, err error) {
+	keyFromSig, err := ExportPublicKey(origin, signatureString)
 	if err != nil {
 		return
 	}
+	address = crypto.PubkeyToAddress(*keyFromSig)
+	return
+}
+
+func ExportAddressHex(origin []byte, signed string) (addressHex string, err error) {
+	address, err := ExportAddress(origin, signed)
+	if err != nil {
+		return
+	}
+	addressHex = address.Hex()
 	return
 }
 

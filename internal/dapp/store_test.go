@@ -1,18 +1,18 @@
 package dapp_test
 
 import (
-	"crypto/ecdsa"
 	"math/rand"
 	"testing"
 
 	"github.com/dataverse-os/dapp-backend/internal/dapp"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 )
 
 func TestLookupAndUpdateUserModelVersion(t *testing.T) {
 	var (
-		pubKey        = lo.Must(crypto.GenerateKey()).PublicKey
+		address       = crypto.PubkeyToAddress(lo.Must(crypto.GenerateKey()).PublicKey)
 		tempModelName = "temp"
 		randomVersion = rand.Uint64()
 	)
@@ -21,7 +21,7 @@ func TestLookupAndUpdateUserModelVersion(t *testing.T) {
 	defer dapp.BoltDB.Close()
 
 	t.Run("lookup model version (not exist)", func(t *testing.T) {
-		gotVersion, err := dapp.LookupUserModelVersion(&pubKey, tempModelName)
+		gotVersion, err := dapp.LookupUserModelVersion(address, tempModelName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -30,13 +30,13 @@ func TestLookupAndUpdateUserModelVersion(t *testing.T) {
 		}
 	})
 	t.Run("update model version", func(t *testing.T) {
-		err := dapp.UpdateUserModelVersion(&pubKey, tempModelName, randomVersion)
+		err := dapp.UpdateUserModelVersion(address, tempModelName, randomVersion)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 	t.Run("lookup model version (exist)", func(t *testing.T) {
-		gotVersion, err := dapp.LookupUserModelVersion(&pubKey, tempModelName)
+		gotVersion, err := dapp.LookupUserModelVersion(address, tempModelName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -48,7 +48,7 @@ func TestLookupAndUpdateUserModelVersion(t *testing.T) {
 
 func TestLookupUserModelVersion(t *testing.T) {
 	type args struct {
-		pubKey    *ecdsa.PublicKey
+		address   common.Address
 		modelName string
 	}
 	tests := []struct {
@@ -60,7 +60,7 @@ func TestLookupUserModelVersion(t *testing.T) {
 		{
 			name: "common",
 			args: args{
-				pubKey:    &lo.Must(crypto.GenerateKey()).PublicKey,
+				address:   crypto.PubkeyToAddress(lo.Must(crypto.GenerateKey()).PublicKey),
 				modelName: "tempModelName",
 			},
 			wantVersion: -1,
@@ -71,7 +71,7 @@ func TestLookupUserModelVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dapp.InitBolt()
 			defer dapp.BoltDB.Close()
-			gotVersion, err := dapp.LookupUserModelVersion(tt.args.pubKey, tt.args.modelName)
+			gotVersion, err := dapp.LookupUserModelVersion(tt.args.address, tt.args.modelName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LookupUserModelVersion() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -85,7 +85,7 @@ func TestLookupUserModelVersion(t *testing.T) {
 
 func TestUpdateUserModelVersion(t *testing.T) {
 	type args struct {
-		pubKey    *ecdsa.PublicKey
+		address   common.Address
 		modelName string
 		version   uint64
 	}
@@ -97,7 +97,7 @@ func TestUpdateUserModelVersion(t *testing.T) {
 		{
 			name: "common",
 			args: args{
-				pubKey:    &lo.Must(crypto.GenerateKey()).PublicKey,
+				address:   crypto.PubkeyToAddress(lo.Must(crypto.GenerateKey()).PublicKey),
 				modelName: "tempModelName",
 				version:   1,
 			},
@@ -108,7 +108,7 @@ func TestUpdateUserModelVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dapp.InitBolt()
 			defer dapp.BoltDB.Close()
-			if err := dapp.UpdateUserModelVersion(tt.args.pubKey, tt.args.modelName, tt.args.version); (err != nil) != tt.wantErr {
+			if err := dapp.UpdateUserModelVersion(tt.args.address, tt.args.modelName, tt.args.version); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateUserModelVersion() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
