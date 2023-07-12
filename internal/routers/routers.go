@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"time"
@@ -62,13 +61,7 @@ func InitRouter() {
 			MaxAge: 12 * time.Hour,
 		}),
 	)
-	router.Any("/api/*path", func(ctx *gin.Context) {
-		ctx.Request.URL.Scheme = ceramicURL.Scheme
-		ctx.Request.URL.Host = ceramicURL.Host
-		req := httputil.NewSingleHostReverseProxy(ctx.Request.URL)
-		req.ServeHTTP(ctx.Writer, ctx.Request)
-		ctx.Abort()
-	})
+	router.Any("/api/*path", CeramicProxy)
 	d := router.Group("/dataverse", checkWithNonce, CheckMiddleware())
 	{
 		d.POST("/validate", validate)
