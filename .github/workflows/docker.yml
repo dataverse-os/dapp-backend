@@ -13,6 +13,10 @@ env:
   CONTAINER: dapp-backend
   K8S_DEPLOYMENT: dapp-backend
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
 jobs:
   build:
     name: Build for multi-platform
