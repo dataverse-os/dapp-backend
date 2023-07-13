@@ -16,7 +16,7 @@ env:
 jobs:
   build:
     name: Build for multi-platform
-    if: github.actor == 'dataverse-os' 
+    if: github.repository_owner == 'dataverse-os' 
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -63,7 +63,7 @@ jobs:
     needs:
       - build
     name: Rollout Testnet version
-    if: github.actor == 'dataverse-os' 
+    if: github.repository_owner == 'dataverse-os' 
     runs-on: ubuntu-latest
     steps:
       - uses: azure/setup-kubectl@v3
