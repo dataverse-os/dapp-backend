@@ -25,7 +25,7 @@ var (
 	ceramicAdminKey *ecdsa.PrivateKey
 	CeramicURL      = os.Getenv("CERAMIC_URL")
 	ceramicURL      *url.URL
-	checkSign       = os.Getenv("NO_CHECK_SIGN") == ""
+	isSandbox       = os.Getenv("IS_SANDBOX") != ""
 )
 
 func init() {
@@ -63,7 +63,11 @@ func InitRouter() {
 		}),
 	)
 	router.Any("/api/*path", CeramicProxy)
-	d := router.Group("/dataverse", checkWithNonce, CheckMiddleware())
+	dMiddleware := []gin.HandlerFunc{checkWithNonce}
+	if !isSandbox {
+		dMiddleware = append(dMiddleware, CheckMiddleware())
+	}
+	d := router.Group("/dataverse", dMiddleware...)
 	{
 		d.POST("/validate", validate)
 		d.POST("/dapp", deployDapp)
@@ -94,11 +98,9 @@ func CheckMiddleware() gin.HandlerFunc {
 			ResponseError(ctx, err, 400)
 			return
 		}
-		if checkSign {
-			if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &ceramicAdminKey.PublicKey); err != nil {
-				ResponseError(ctx, err, 403)
-				return
-			}
+		if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &ceramicAdminKey.PublicKey); err != nil {
+			ResponseError(ctx, err, 403)
+			return
 		}
 		ctx.Request.Body = io.NopCloser(&data)
 	}
