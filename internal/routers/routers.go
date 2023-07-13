@@ -25,6 +25,7 @@ var (
 	ceramicAdminKey *ecdsa.PrivateKey
 	CeramicURL      = os.Getenv("CERAMIC_URL")
 	ceramicURL      *url.URL
+	checkSign       = os.Getenv("NO_CHECK_SIGN") == ""
 )
 
 func init() {
@@ -93,9 +94,11 @@ func CheckMiddleware() gin.HandlerFunc {
 			ResponseError(ctx, err, 400)
 			return
 		}
-		if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &ceramicAdminKey.PublicKey); err != nil {
-			ResponseError(ctx, err, 403)
-			return
+		if checkSign {
+			if err = verify.CheckSign(data.Bytes(), ctx.GetHeader("dataverse-sig"), &ceramicAdminKey.PublicKey); err != nil {
+				ResponseError(ctx, err, 403)
+				return
+			}
 		}
 		ctx.Request.Body = io.NopCloser(&data)
 	}
