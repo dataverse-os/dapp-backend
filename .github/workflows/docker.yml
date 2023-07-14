@@ -11,10 +11,16 @@ on:
 
 env:
   CONTAINER: dapp-backend
+  K8S_DEPLOYMENT: dapp-backend
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
 
 jobs:
   build:
     name: Build for multi-platform
+    if: github.repository_owner == 'dataverse-os' 
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -56,4 +62,23 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ matrix.PLATFORM }}
+
+  rollout-testnet:
+    needs:
+      - build
+    name: Rollout Testnet version
+    if: github.repository_owner == 'dataverse-os' 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/setup-kubectl@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::164331695891:role/GitHubAction
+          aws-region: ap-east-1
+      
+      - name: rollout update app
+        run: |
+          aws eks update-kubeconfig --region ap-east-1 --name eks-hk
+          kubectl -n testnet rollout restart deployment ${{ env.K8S_DEPLOYMENT }}

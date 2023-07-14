@@ -40,7 +40,11 @@ func InitRouter() {
 		}),
 	)
 	router.Any("/api/*path", CeramicProxy)
-	d := router.Group("/dataverse")
+	dMiddleware := []gin.HandlerFunc{checkWithNonce}
+	if !dapp.IsSandbox {
+		dMiddleware = append(dMiddleware, CheckMiddleware())
+	}
+	d := router.Group("/dataverse", dMiddleware...)
 	{
 		d.POST("/validate", checkWithNonce, CheckMiddleware(), validate)
 		d.POST("/dapp", checkWithNonce, CheckMiddleware(), deployDapp)

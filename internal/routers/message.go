@@ -18,4 +18,5 @@ func ResponseError(ctx *gin.Context, err error, code int) {
 		Data:    err.Error(),
 	}
 	ctx.Render(code, yamlRender{render.YAML{Data: resp}})
+	ctx.Abort()
 }
