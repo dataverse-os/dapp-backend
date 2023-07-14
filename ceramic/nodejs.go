@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -66,7 +67,7 @@ func (*NodeJSBinding) CheckSyntax(ctx context.Context, schema string) (err error
 		return
 	}
 	if len(out) != 0 {
-		err = errors.New(strings.TrimSuffix(string(out), "\n"))
+		err = fmt.Errorf("check syntax with error from ceramic: %s", strings.TrimSuffix(string(out), "\n"))
 	}
 	return
 }
