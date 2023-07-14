@@ -36,7 +36,7 @@ jobs:
           username: dataverseos
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker meta
+      - name: Docker metaw
         id: meta
         uses: docker/metadata-action@v4
         with:
@@ -67,7 +67,7 @@ jobs:
     needs:
       - build
     name: Rollout Testnet version
-    if: github.repository_owner == 'dataverse-os' 
+    if: github.repository_owner == 'dataverse-os' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: azure/setup-kubectl@v3

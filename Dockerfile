@@ -17,7 +17,7 @@ COPY --from=builder-node /build-js/dist /build/js-scripts/dist
 RUN go mod download
 RUN go build -ldflags="-s -w" -o /app/dapp-backend.exe /build/cmd/
 
-FROM dataverseos/composedb-tools:latest
+FROM node:16
 
 RUN mkdir /app
 COPY --from=builder-go /app/dapp-backend.exe /app/dapp-backend.exe
