@@ -41,7 +41,7 @@ func TestCheckSign(t *testing.T) {
 
 func TestCheckSignWithHexPublicKey(t *testing.T) {
 	type args struct {
-		origin string
+		origin []byte
 		signed string
 	}
 	tests := []struct {
@@ -53,7 +53,7 @@ func TestCheckSignWithHexPublicKey(t *testing.T) {
 		{
 			name: "common",
 			args: args{
-				origin: "I want create a dataverse Dapp:\nName:dTwit\nCeramic Url:https://ceramic.dtwit.com\n",
+				origin: []byte("I want create a dataverse Dapp:\nName:dTwit\nCeramic Url:https://ceramic.dtwit.com\n"),
 				signed: "0x462efe78ae51f25a8516d3ce14a84eb7366d191ae95a8c3f067f34750d73b68f4174b29c9c94ed0ca2c0008b437fbed5030b311b83f0e39ebe5baa4a7d2053861b",
 			},
 			wantHexKey: crypto.PubkeyToAddress(lo.Must(crypto.HexToECDSA("c0eb4f72a47364ac981c9db9636f4809108401126146c3319f2c27286d453b90")).PublicKey).Hex(),
@@ -62,7 +62,7 @@ func TestCheckSignWithHexPublicKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHexKey, err := verify.ExportPublicKey(tt.args.origin, tt.args.signed)
+			gotHexKey, err := verify.ExportAddressHex(tt.args.origin, tt.args.signed)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckSignWithHexPublicKey() error = %v, wantErr %v", err, tt.wantErr)
 				return
