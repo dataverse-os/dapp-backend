@@ -13,6 +13,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/tidwall/gjson v1.14.4
 	go.etcd.io/bbolt v1.3.7
+	golang.org/x/sync v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

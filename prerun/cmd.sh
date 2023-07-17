@@ -7,4 +7,4 @@ echo $DID
 
 jq --arg did "${DID}" '."http-api"."admin-dids"=[$did]' /data/daemon.config.json | sponge /data/daemon.config.json
 
-echo "DID_PRIVATE_KEY=${PRIVATE_KEY}" > /data/.private-key.env
+echo "CERAMIC_ADMIN_KEY=${PRIVATE_KEY}" > /data/.private-key.env

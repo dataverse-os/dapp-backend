@@ -15,8 +15,8 @@ var generateKeyCmd = &cobra.Command{
 }
 
 func checkPrivateKey(cmd *cobra.Command, args []string) error {
-	if _, ok := os.LookupEnv("DID_PRIVATE_KEY"); !ok {
-		err := fmt.Errorf("environment DID_PRIVATE_KEY not found, Generate a private key with generate-key command")
+	if _, ok := os.LookupEnv("CERAMIC_ADMIN_KEY"); !ok {
+		err := fmt.Errorf("environment CERAMIC_ADMIN_KEY not found, Generate a private key with generate-key command")
 		return err
 	}
 	return nil

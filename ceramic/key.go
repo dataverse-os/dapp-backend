@@ -19,5 +19,5 @@ func GenerateKey() {
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 	fmt.Printf("[Private Key]    >>> %s\n", hex.EncodeToString(crypto.FromECDSA(privateKey)))
 	fmt.Printf("[Public Address] >>> %s\n\n", fromAddress.Hex())
-	fmt.Printf("If you are using docker, set -e DID_PRIVATE_KEY={PRIVATE_KEY_HERE} flag\n")
+	fmt.Printf("If you are using docker, set -e CERAMIC_ADMIN_KEY={PRIVATE_KEY_HERE} flag\n")
 }
