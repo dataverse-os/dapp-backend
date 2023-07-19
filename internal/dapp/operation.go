@@ -3,10 +3,26 @@ package dapp
 import (
 	"context"
 	"fmt"
+	"os"
+	"runtime"
+	"strconv"
 
 	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
+)
+
+var (
+	maxWorkers = func() int {
+		m := os.Getenv("MAX_NODEJS_WORKERS")
+		if m == "" {
+			return runtime.GOMAXPROCS(0) * 4
+		} else {
+			return lo.Must(strconv.Atoi(m))
+		}
+	}()
+	sem = make(chan struct{}, maxWorkers)
 )
 
 func DeployStreamModels(ctx context.Context, id uuid.UUID, schemas []StreamModel, sess ceramic.Session) (result []ModelResult, err error) {
@@ -35,6 +51,10 @@ func DeployStreamModels(ctx context.Context, id uuid.UUID, schemas []StreamModel
 		// parallel deploy model
 		schemaIndex := i
 		eg.Go(func() error {
+
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
 			// deploy modified model to ceramic node
 			if _, result[schemaIndex].StreamID, err =
 				ceramic.DeployStreamModel(ctx, schemas[schemaIndex].Schema, sess); err != nil {
