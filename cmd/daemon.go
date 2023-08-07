@@ -21,6 +21,9 @@ var daemonCmd = &cobra.Command{
 		} else {
 			dapp.InitCeramicSession()
 			dapp.InitBolt()
+			if os.Getenv("ENABLE_STREAM_BINDING_FILE_INDEX") == "TRUE" {
+				ceramic.InitComposeDB()
+			}
 			routers.InitRouter()
 			routers.Start()
 		}

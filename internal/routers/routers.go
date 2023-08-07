@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dataverse-os/dapp-backend/internal/dapp"
@@ -50,6 +51,10 @@ func InitRouter() {
 		}
 		d.GET("/model-version", GetModelVersion)
 		d.POST("/model-version", HeaderChecker("dataverse-sig"), SignatureMiddleware, PostUpdateModelVersion)
+
+		if os.Getenv("ENABLE_STREAM_BINDING_FILE_INDEX") == "TRUE" {
+			d.GET("/stream-binding", GetStreamFileBinding)
+		}
 	}
 }
 
