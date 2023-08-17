@@ -21,8 +21,6 @@ const (
 	StreamIdTypeUnloadable
 	StreamIdTypeEventId
 
-	StreamIDCodec uint64 = 0xce
-
 	StreamIDEncoding = multibase.Base36
 )
 
@@ -38,7 +36,7 @@ var (
 
 func (id StreamID) String() string {
 	var buf bytes.Buffer
-	buf.Write(binary.AppendUvarint(nil, StreamIDCodec))
+	buf.Write(binary.AppendUvarint(nil, uint64(multicodec.Streamid)))
 	buf.Write(binary.AppendUvarint(nil, uint64(id.Type)))
 	buf.Write(id.Cid.Bytes())
 	if id.Log.ByteLen() != 0 {
@@ -62,6 +60,7 @@ func ParseStreamID(str string) (id StreamID, err error) {
 		encoding    multibase.Encoding
 		streamCodec uint64
 		streamType  uint64
+		idx         int
 	)
 
 	if encoding, buf, err = multibase.Decode(str); err != nil {
@@ -72,21 +71,24 @@ func ParseStreamID(str string) (id StreamID, err error) {
 		return
 	}
 	// check <multicodec-streamCodec>
-	streamCodec, buf, _, err = GetUVarInt(buf)
-	if err != nil {
+	if streamCodec, idx = binary.Uvarint(buf); idx <= 0 {
+		err = fmt.Errorf("unable to unpack stream codec %v", buf)
 		return
 	}
 	if multicodec.Code(streamCodec) != multicodec.Streamid {
 		err = fmt.Errorf("unexpected multicodec %x != 0xce", buf[0])
 		return
 	}
+	buf = buf[idx:]
 
 	// check <stream-type>
-	streamType, buf, _, err = GetUVarInt(buf)
-	if err != nil {
+	if streamType, idx = binary.Uvarint(buf); idx <= 0 {
+		err = fmt.Errorf("unable to unpack stream type %v", buf)
 		return
 	}
 	id.Type = StreamIdType(streamType)
+	buf = buf[idx:]
+
 	var nr int
 	if nr, id.Cid, err = cid.CidFromBytes(buf); err != nil {
 		return
