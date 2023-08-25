@@ -2,7 +2,6 @@ package routers
 
 import (
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/dataverse-os/dapp-backend/internal/dapp"
 	"github.com/dataverse-os/dapp-backend/verify"
@@ -67,17 +66,4 @@ func (r yamlRender) Render(w http.ResponseWriter) error {
 
 	_, err = w.Write(bytes)
 	return err
-}
-
-func CeramicProxy(ctx *gin.Context) {
-	proxy := &httputil.ReverseProxy{
-		Rewrite: func(r *httputil.ProxyRequest) {
-			r.Out.Header = r.In.Header
-			r.Out.Host = dapp.CeramicSession.URL.Host
-			r.Out.URL.Host = dapp.CeramicSession.URL.Host
-			r.Out.URL.Scheme = dapp.CeramicSession.URL.Scheme
-		},
-	}
-	proxy.ServeHTTP(ctx.Writer, ctx.Request)
-	ctx.Abort()
 }

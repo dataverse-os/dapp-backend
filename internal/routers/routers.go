@@ -6,14 +6,11 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/dataverse-os/dapp-backend/internal/dapp"
 	"github.com/dataverse-os/dapp-backend/verify"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,23 +20,6 @@ var (
 
 func InitRouter() {
 	router = gin.Default()
-	router.Use(
-		cors.New(cors.Config{
-			AllowOrigins: []string{"*"},
-			AllowMethods: []string{
-				http.MethodGet, http.MethodPost, http.MethodPut,
-				http.MethodDelete, http.MethodOptions, http.MethodPatch,
-				http.MethodHead,
-			},
-			AllowHeaders:     []string{"Origin"},
-			ExposeHeaders:    []string{"Content-Length"},
-			AllowCredentials: true,
-			AllowOriginFunc: func(origin string) bool {
-				return true
-			},
-			MaxAge: 12 * time.Hour,
-		}),
-	)
 	router.Any("/api/*path", CeramicProxy)
 	d := router.Group("/dataverse")
 	{

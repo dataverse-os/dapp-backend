@@ -2,7 +2,11 @@ package ceramic
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
+	"database/sql/driver"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ipfs/go-cid"
@@ -10,42 +14,71 @@ import (
 	"github.com/multiformats/go-multicodec"
 )
 
-type StreamIdType uint64
+type (
+	StreamType uint64
+	CommitType uint64
+)
 
 // https://github.com/ceramicnetwork/CIPs/blob/main/CIPs/cip-59.md
 const (
-	StreamIdTypeTile StreamIdType = iota
-	StreamIdTypeCaip10Link
-	StreamIdTypeModel
-	StreamIdTypeModelInstanceDocument
-	StreamIdTypeUnloadable
-	StreamIdTypeEventId
-
-	StreamIDEncoding = multibase.Base36
+	StreamTypeTile StreamType = iota
+	StreamTypeCaip10Link
+	StreamTypeModel
+	StreamTypeModelInstanceDocument
+	StreamTypeUnloadable
+	StreamTypeEventId
 )
 
-type StreamID struct {
-	Type StreamIdType
-	Cid  cid.Cid
-	Log  cid.Cid
-}
+const (
+	CommitTypeGenesis CommitType = iota
+	CommitTypeSigned
+	CommitTypeAnchor
+)
+
+const (
+	StreamIdEncoding = multibase.Base36
+)
 
 var (
-	streamIdEncoder = multibase.MustNewEncoder(StreamIDEncoding)
+	streamIdEncoder = multibase.MustNewEncoder(StreamIdEncoding)
 )
 
-func (id StreamID) String() string {
+type StreamId struct {
+	Type       StreamType
+	Cid        cid.Cid
+	Log        cid.Cid
+	GenesisLog bool
+}
+
+func (id StreamId) String() string {
 	var buf bytes.Buffer
 	buf.Write(binary.AppendUvarint(nil, uint64(multicodec.Streamid)))
 	buf.Write(binary.AppendUvarint(nil, uint64(id.Type)))
 	buf.Write(id.Cid.Bytes())
 	if id.Log.ByteLen() != 0 {
 		buf.Write(id.Log.Bytes())
+	} else if id.GenesisLog {
+		buf.Write([]byte{0})
 	}
 	return streamIdEncoder.Encode(buf.Bytes())
 }
 
-func NewStreamID(t StreamIdType, cidStr ...string) (id StreamID, err error) {
+func (id StreamId) Genesis() StreamId {
+	id.GenesisLog = true
+	return id
+}
+
+func (id StreamId) With(str string) StreamId {
+	id.GenesisLog = false
+	id.Log = cid.MustParse(str)
+	return id
+}
+
+func (id StreamId) GetStream(ctx context.Context) (stream Stream, err error) {
+	return GetStreamId(ctx, id)
+}
+
+func NewStreamId(t StreamType, cidStr ...string) (id StreamId, err error) {
 	if len(cidStr) != 1 && len(cidStr) != 2 {
 		err = fmt.Errorf("unexpect cid length, could only 1 or 2 (genesis cid and log cid)")
 	}
@@ -54,7 +87,7 @@ func NewStreamID(t StreamIdType, cidStr ...string) (id StreamID, err error) {
 	return
 }
 
-func ParseStreamID(str string) (id StreamID, err error) {
+func ParseStreamID(str string) (id StreamId, err error) {
 	var (
 		buf         []byte
 		encoding    multibase.Encoding
@@ -66,7 +99,7 @@ func ParseStreamID(str string) (id StreamID, err error) {
 	if encoding, buf, err = multibase.Decode(str); err != nil {
 		return
 	}
-	if encoding != StreamIDEncoding {
+	if encoding != StreamIdEncoding {
 		err = fmt.Errorf("unexpected encoding id %c with input %s", encoding, str)
 		return
 	}
@@ -86,17 +119,61 @@ func ParseStreamID(str string) (id StreamID, err error) {
 		err = fmt.Errorf("unable to unpack stream type %v", buf)
 		return
 	}
-	id.Type = StreamIdType(streamType)
+	id.Type = StreamType(streamType)
 	buf = buf[idx:]
 
 	var nr int
 	if nr, id.Cid, err = cid.CidFromBytes(buf); err != nil {
 		return
 	}
-	if len(buf) != nr {
-		if _, id.Log, err = cid.CidFromBytes(buf[nr:]); err != nil {
+	buf = buf[nr:]
+	if len(buf) != 0 {
+		if len(buf) == 1 && buf[0] == 0 {
+			id.GenesisLog = true
+		} else if _, id.Log, err = cid.CidFromBytes(buf); err != nil {
 			return
 		}
 	}
 	return
+}
+
+var _ json.Marshaler = (*StreamId)(nil)
+
+func (id *StreamId) MarshalJSON() ([]byte, error) {
+	return json.Marshal(id.String())
+}
+
+var _ json.Unmarshaler = (*StreamId)(nil)
+
+func (id *StreamId) UnmarshalJSON(src []byte) (err error) {
+	var str string
+	if err = json.Unmarshal(src, &str); err != nil {
+		return
+	}
+	if *id, err = ParseStreamID(str); err != nil {
+		return
+	}
+	return
+}
+
+func (StreamId) GormDataType() string {
+	return "text"
+}
+
+var _ sql.Scanner = (*StreamId)(nil)
+
+func (id *StreamId) Scan(src any) (err error) {
+	str, ok := src.(string)
+	if !ok {
+		err = fmt.Errorf("cannot parse %s to string", src)
+		return
+	}
+	*id, err = ParseStreamID(str)
+	return
+}
+
+var _ driver.Valuer = (*StreamId)(nil)
+
+func (id *StreamId) Value() (driver.Value, error) {
+	return id.String, nil
 }

@@ -1,10 +1,9 @@
 module github.com/dataverse-os/dapp-backend
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ethereum/go-ethereum v1.12.0
-	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.0
 	github.com/graphql-go/graphql v0.8.1

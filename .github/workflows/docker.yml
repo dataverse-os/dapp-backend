@@ -16,6 +16,7 @@ env:
 permissions:
   id-token: write # This is required for requesting the JWT
   contents: read # This is required for actions/checkout
+  packages: write
 
 jobs:
   build:
@@ -36,12 +37,21 @@ jobs:
           username: dataverseos
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker metaw
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+
+      - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
           # list of Docker images to use as base name for tags
-          images: dataverseos/dapp-backend
+          images: |
+            dataverseos/dapp-backend
+            ghcr.io/dataverse-os/dapp-backend
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -59,7 +69,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 

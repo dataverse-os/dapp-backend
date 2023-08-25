@@ -16,9 +16,10 @@ type StreamFileBinding struct {
 }
 
 type StreamContent struct {
-	Content datatypes.JSON `json:"content,omitempty"`
-	File    datatypes.JSON `json:"file,omitempty"`
-	FileID  string         `json:"fileId,omitempty"`
+	Content  datatypes.JSON `json:"content,omitempty"`
+	File     datatypes.JSON `json:"file,omitempty"`
+	FileID   string         `json:"fileId,omitempty"`
+	Verified bool           `json:"verified,omitempty"`
 }
 
 func ListStreamBindingFiles(ctx context.Context, modelID, indexFileModelID string, pkh *string) (

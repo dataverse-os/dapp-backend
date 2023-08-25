@@ -10,9 +10,10 @@ import (
 
 func TestStreamID_String(t *testing.T) {
 	type fields struct {
-		Type ceramic.StreamIdType
-		Cid  cid.Cid
-		Log  cid.Cid
+		Type       ceramic.StreamType
+		Cid        cid.Cid
+		Log        cid.Cid
+		GenesisLog bool
 	}
 	tests := []struct {
 		name   string
@@ -22,7 +23,7 @@ func TestStreamID_String(t *testing.T) {
 		{
 			name: "stream_id",
 			fields: fields{
-				Type: ceramic.StreamIdTypeModelInstanceDocument,
+				Type: ceramic.StreamTypeModelInstanceDocument,
 				Cid:  cid.MustParse("bagcqceragiwmxdtelb45wjl6calr45bh4rpcipbmh3t3skrkjvv3foihfmrq"),
 			},
 			want: "kjzl6kcym7w8y64sx1g97dy5v3xmm49mnx0p9mofs44t6y0y7wp2ko8z7w9azhf",
@@ -30,19 +31,29 @@ func TestStreamID_String(t *testing.T) {
 		{
 			name: "commit_id",
 			fields: fields{
-				Type: ceramic.StreamIdTypeTile,
+				Type: ceramic.StreamTypeTile,
 				Cid:  cid.MustParse("bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a"),
 				Log:  cid.MustParse("bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova"),
 			},
 			want: "k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju",
 		},
+		{
+			name: "commit_id_genesis",
+			fields: fields{
+				Type:       ceramic.StreamTypeModelInstanceDocument,
+				Cid:        cid.MustParse("bagcqceragiwmxdtelb45wjl6calr45bh4rpcipbmh3t3skrkjvv3foihfmrq"),
+				GenesisLog: true,
+			},
+			want: "k3y52mos6605bmzm5myblgj6xp7z4tach62szoh9s7xe7ldyrc8iab0fug5e64buo",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			id := ceramic.StreamID{
-				Type: tt.fields.Type,
-				Cid:  tt.fields.Cid,
-				Log:  tt.fields.Log,
+			id := ceramic.StreamId{
+				Type:       tt.fields.Type,
+				Cid:        tt.fields.Cid,
+				Log:        tt.fields.Log,
+				GenesisLog: tt.fields.GenesisLog,
 			}
 			if got := id.String(); got != tt.want {
 				t.Errorf("StreamID.String() = %v, want %v", got, tt.want)
@@ -58,7 +69,7 @@ func TestParseStreamID(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantId  ceramic.StreamID
+		wantId  ceramic.StreamId
 		wantErr bool
 	}{
 		{
@@ -66,9 +77,21 @@ func TestParseStreamID(t *testing.T) {
 			args: args{
 				str: "kjzl6kcym7w8y64sx1g97dy5v3xmm49mnx0p9mofs44t6y0y7wp2ko8z7w9azhf",
 			},
-			wantId: ceramic.StreamID{
-				Type: ceramic.StreamIdTypeModelInstanceDocument,
+			wantId: ceramic.StreamId{
+				Type: ceramic.StreamTypeModelInstanceDocument,
 				Cid:  cid.MustParse("bagcqceragiwmxdtelb45wjl6calr45bh4rpcipbmh3t3skrkjvv3foihfmrq"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "commit_id_genesis",
+			args: args{
+				str: "k3y52mos6605bmzm5myblgj6xp7z4tach62szoh9s7xe7ldyrc8iab0fug5e64buo",
+			},
+			wantId: ceramic.StreamId{
+				Type:       ceramic.StreamTypeModelInstanceDocument,
+				Cid:        cid.MustParse("bagcqceragiwmxdtelb45wjl6calr45bh4rpcipbmh3t3skrkjvv3foihfmrq"),
+				GenesisLog: true,
 			},
 			wantErr: false,
 		},
@@ -77,8 +100,8 @@ func TestParseStreamID(t *testing.T) {
 			args: args{
 				str: "k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju",
 			},
-			wantId: ceramic.StreamID{
-				Type: ceramic.StreamIdTypeTile,
+			wantId: ceramic.StreamId{
+				Type: ceramic.StreamTypeTile,
 				Cid:  cid.MustParse("bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a"),
 				Log:  cid.MustParse("bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova"),
 			},
