@@ -22,7 +22,9 @@ func init() {
 		log.Fatalln("failed init wnfs postgres connection:", err)
 	}
 
-	db.AutoMigrate(
+	if err = db.AutoMigrate(
 		&CommitProof{},
-	)
+	); err != nil {
+		log.Fatalln("failed init wnfs model:", err)
+	}
 }
