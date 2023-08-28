@@ -3,7 +3,6 @@ package routers
 import (
 	"bytes"
 	"net/http/httputil"
-	"strings"
 
 	"github.com/dataverse-os/dapp-backend/internal/dapp"
 	"github.com/dataverse-os/dapp-backend/internal/wnfs"
@@ -24,15 +23,11 @@ func CeramicProxy(ctx *gin.Context) {
 		body:           new(bytes.Buffer),
 	}
 	proxy.ServeHTTP(res, ctx.Request)
-	for k := range wnfs.StreamResponsePath {
-		if strings.HasPrefix(ctx.Request.URL.Path, k) {
-			go wnfs.AppendToStreamVerifyGroup(res.body)
-		}
-	}
-	for k := range wnfs.CollectionResponsePath {
-		if strings.HasPrefix(ctx.Request.URL.Path, k) {
-			go wnfs.AppendToCollectionVerifyGroup(res.body)
-		}
+	switch {
+	case wnfs.IsGetStreamRequest(ctx):
+		go wnfs.HandleStreamVerify(res.body)
+	case wnfs.IsGetCollectionRequest(ctx):
+		go wnfs.HandleCollectionVerify(res.body)
 	}
 	ctx.Abort()
 }

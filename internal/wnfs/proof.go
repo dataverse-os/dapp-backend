@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -20,16 +23,24 @@ func init() {
 	VerifyGroup.SetLimit(1)
 }
 
+func IsGetStreamRequest(ctx *gin.Context) bool {
+	if ctx.Writer.Status() != http.StatusOK {
+		return false
+	}
+	for k := range StreamResponsePath {
+		if strings.HasPrefix(ctx.Request.URL.Path, k) {
+			return true
+		}
+	}
+	return false
+}
+
 var StreamResponsePath = map[string]struct{}{
 	"/api/v0/streams/": {},
 	"/api/v0/commits/": {},
 }
 
-var CollectionResponsePath = map[string]struct{}{
-	"/api/v0/collection": {},
-}
-
-func AppendToStreamVerifyGroup(buf *bytes.Buffer) {
+func HandleStreamVerify(buf *bytes.Buffer) {
 	var stream ceramic.Stream
 	if err := json.Unmarshal(buf.Bytes(), &stream); err != nil {
 		log.Println(err)
@@ -43,7 +54,23 @@ func AppendToStreamVerifyGroup(buf *bytes.Buffer) {
 	})
 }
 
-func AppendToCollectionVerifyGroup(buf *bytes.Buffer) {
+func IsGetCollectionRequest(ctx *gin.Context) bool {
+	if ctx.Writer.Status() != http.StatusOK {
+		return false
+	}
+	for k := range CollectionResponsePath {
+		if strings.HasPrefix(ctx.Request.URL.Path, k) {
+			return true
+		}
+	}
+	return false
+}
+
+var CollectionResponsePath = map[string]struct{}{
+	"/api/v0/collection": {},
+}
+
+func HandleCollectionVerify(buf *bytes.Buffer) {
 	var collection ceramic.Collection
 	if err := json.Unmarshal(buf.Bytes(), &collection); err != nil {
 		log.Println(err)
