@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/ipfs/go-cid"
 )
@@ -75,7 +76,7 @@ func (state StreamState) ContentHash() (sum [32]byte, err error) {
 }
 
 func GetStreamId(ctx context.Context, streamId StreamId) (stream Stream, err error) {
-	url := fmt.Sprintf("https://dataverseceramicdaemon.com/api/v0/streams/%s", streamId)
+	url := fmt.Sprintf("%s/api/v0/streams/%s", os.Getenv("CERAMIC_URL"), streamId)
 	var req *http.Request
 	var resp *http.Response
 	if req, err = http.NewRequestWithContext(ctx, http.MethodGet, url, nil); err != nil {
