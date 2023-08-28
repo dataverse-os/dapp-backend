@@ -26,12 +26,12 @@ func CeramicProxy(ctx *gin.Context) {
 	proxy.ServeHTTP(res, ctx.Request)
 	for k := range wnfs.StreamResponsePath {
 		if strings.HasPrefix(ctx.Request.URL.Path, k) {
-			wnfs.AppendToStreamVerifyGroup(res.body)
+			go wnfs.AppendToStreamVerifyGroup(res.body)
 		}
 	}
 	for k := range wnfs.CollectionResponsePath {
 		if strings.HasPrefix(ctx.Request.URL.Path, k) {
-			wnfs.AppendToCollectionVerifyGroup(res.body)
+			go wnfs.AppendToCollectionVerifyGroup(res.body)
 		}
 	}
 	ctx.Abort()
