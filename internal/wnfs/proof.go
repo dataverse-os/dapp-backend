@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/ethereum/go-ethereum/common"
@@ -20,17 +19,43 @@ func init() {
 }
 
 var StreamResponsePath = map[string]struct{}{
-	"/api/v0/streams": {},
-	"/api/v0/commits": {},
+	"/api/v0/streams/": {},
+	"/api/v0/commits/": {},
 }
 
-func AppendToVerifyGroup(buf *bytes.Buffer) {
+var CollectionResponsePath = map[string]struct{}{
+	"/api/v0/collection": {},
+}
+
+func AppendToStreamVerifyGroup(buf *bytes.Buffer) {
+	var stream ceramic.Stream
+	if err := json.Unmarshal(buf.Bytes(), &stream); err != nil {
+		fmt.Println(err)
+		return
+	}
 	VerifyGroup.Go(func() (err error) {
-		if err = StoreAndVerifyContentHashFromReader(context.Background(), buf); err != nil {
-			log.Println(err)
+		if err = StoreAndVerifyContentHash(context.Background(), stream.State); err != nil {
+			return
 		}
 		return
 	})
+}
+
+func AppendToCollectionVerifyGroup(buf *bytes.Buffer) {
+	var collection ceramic.Collection
+	if err := json.Unmarshal(buf.Bytes(), &collection); err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, v := range collection.Edges {
+		state := v.Node
+		VerifyGroup.Go(func() (err error) {
+			if err = StoreAndVerifyContentHash(context.Background(), state); err != nil {
+				return
+			}
+			return
+		})
+	}
 }
 
 type CommitProofStatus uint64
@@ -50,48 +75,38 @@ type CommitProof struct {
 	Status   CommitProofStatus `json:"status"`
 }
 
-func StoreAndVerifyContentHashFromReader(ctx context.Context, buf *bytes.Buffer) (err error) {
-	var stream ceramic.Stream
-	if err = json.Unmarshal(buf.Bytes(), &stream); err != nil {
-		return
-	}
-	if err = StoreAndVerifyContentHash(ctx, stream); err != nil {
-		return
-	}
-	return
-}
-
-func StoreAndVerifyContentHash(ctx context.Context, stream ceramic.Stream) (err error) {
+func StoreAndVerifyContentHash(ctx context.Context, streamState ceramic.StreamState) (err error) {
 	var (
+		streamId            = streamState.StreamId()
 		commit              ceramic.Stream
-		commitProofs        = make([]CommitProof, len(stream.State.Log))
+		commitProofs        = make([]CommitProof, len(streamState.Log))
 		commitProofsInDB    []CommitProof
 		commitProofsInDBMap = make(map[ceramic.StreamId]CommitProof)
-		commitIds           = stream.State.CommitIds()
+		commitIds           = streamState.CommitIds()
 	)
 
 	defer func() {
 		if err != nil {
-			fmt.Printf("wnfs check %s with %d commits\n", stream.StreamId, len(commitProofs))
+			fmt.Printf("wnfs check %s with %d commits\n", streamState.StreamId(), len(commitProofs))
 		}
 	}()
 
 	if err = db.WithContext(ctx).Where(&CommitProof{
-		StreamId: stream.StreamId,
+		StreamId: streamId,
 	}).Find(&commitProofsInDB).Error; err != nil {
 		return
 	}
 	for _, proof := range commitProofsInDB {
 		commitProofsInDBMap[proof.CommitId] = proof
 	}
-	for i, v := range stream.State.Log {
+	for i, v := range streamState.Log {
 		if proof, exists := commitProofsInDBMap[commitIds[i]]; exists {
 			commitProofs[i] = proof
 			continue
 		}
 		commitProofs[i] = CommitProof{
 			CommitId: commitIds[i],
-			StreamId: stream.StreamId,
+			StreamId: streamId,
 			Cid:      v.Cid,
 		}
 		if commit, err = commitIds[i].GetStream(ctx); err != nil {
