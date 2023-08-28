@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/dataverse-os/dapp-backend/ceramic"
 	"github.com/ethereum/go-ethereum/common"
@@ -30,7 +32,7 @@ var CollectionResponsePath = map[string]struct{}{
 func AppendToStreamVerifyGroup(buf *bytes.Buffer) {
 	var stream ceramic.Stream
 	if err := json.Unmarshal(buf.Bytes(), &stream); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 	VerifyGroup.Go(func() (err error) {
@@ -44,7 +46,7 @@ func AppendToStreamVerifyGroup(buf *bytes.Buffer) {
 func AppendToCollectionVerifyGroup(buf *bytes.Buffer) {
 	var collection ceramic.Collection
 	if err := json.Unmarshal(buf.Bytes(), &collection); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 	for _, v := range collection.Edges {
@@ -67,12 +69,14 @@ const (
 )
 
 type CommitProof struct {
-	CommitId ceramic.StreamId  `json:"commitId" gorm:"primaryKey"`
-	StreamId ceramic.StreamId  `json:"streamId"`
-	Cid      string            `json:"cid"`
-	Hash     common.Hash       `json:"hash"`
-	Content  json.RawMessage   `json:"content" gorm:"type:jsonb"`
-	Status   CommitProofStatus `json:"status"`
+	CommitId  ceramic.StreamId  `json:"commitId" gorm:"primaryKey"`
+	Timestamp time.Time         `json:"timestamp"`
+	StreamId  ceramic.StreamId  `json:"streamId"`
+	LogIndex  uint64            `json:"logIndex"`
+	Cid       string            `json:"cid"`
+	Hash      common.Hash       `json:"hash"`
+	Content   json.RawMessage   `json:"content" gorm:"type:jsonb"`
+	Status    CommitProofStatus `json:"status"`
 }
 
 func StoreAndVerifyContentHash(ctx context.Context, streamState ceramic.StreamState) (err error) {
@@ -105,9 +109,11 @@ func StoreAndVerifyContentHash(ctx context.Context, streamState ceramic.StreamSt
 			continue
 		}
 		commitProofs[i] = CommitProof{
-			CommitId: commitIds[i],
-			StreamId: streamId,
-			Cid:      v.Cid,
+			CommitId:  commitIds[i],
+			Timestamp: time.Unix(int64(v.Timestamp), 0),
+			StreamId:  streamId,
+			LogIndex:  uint64(i),
+			Cid:       v.Cid,
 		}
 		if commit, err = commitIds[i].GetStream(ctx); err != nil {
 			return
