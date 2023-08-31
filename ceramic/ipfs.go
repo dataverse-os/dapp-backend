@@ -1,136 +1,76 @@
 package ceramic
 
 import (
+	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 
-	"github.com/ceramicnetwork/go-dag-jose/dagjose"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ipfs/boxo/coreiface/path"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/kubo/client/rpc"
 	"github.com/ipld/go-ipld-prime/datamodel"
-	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
-	"github.com/ipld/go-ipld-prime/node/basicnode"
-	"github.com/ipld/go-ipld-prime/schema"
 )
 
-type Commit struct {
-	Link       cid.Cid
-	Payload    cid.Cid
-	Signatures []Signature
+func NewIpfsImpl(node *rpc.HttpApi) IpfsImpl {
+	return IpfsImpl{node: node}
 }
 
-type Signature struct {
-	Header    any
-	Protected json.RawMessage
-	Signature []byte
+type IpfsImpl struct {
+	node *rpc.HttpApi
 }
 
-func (sig Signature) String() string {
-	return fmt.Sprintf("header: %s\n", sig.Header) +
-		fmt.Sprintf("protected: %s\n", string(sig.Protected)) +
-		fmt.Sprintf("signature: %s", hexutil.Encode(sig.Signature))
-}
-
-func ConvertFrom(dagJws dagjose.DecodedJWS) (commit Commit, err error) {
-	payloadData, err := decodeBase64Url(dagJws.FieldPayload())
-	if err != nil {
-		fmt.Println(err)
-	}
-	if commit.Payload, err = cid.Cast(payloadData); err != nil {
+func (impl IpfsImpl) LoadStreamState(ctx context.Context, tip cid.Cid) (state StreamState, err error) {
+	var commits []NodeDataDecoder
+	if commits, err = impl.LoadCommits(ctx, tip); err != nil {
 		return
 	}
-	if link := dagJws.FieldLink(); link.Exists() {
-		if link, ok := link.Must().Link().(cidlink.Link); ok {
-			commit.Link = link.Cid
-		}
-	}
-	signatureIter := dagJws.FieldSignatures().Must().Iterator()
-	for !signatureIter.Done() {
-		_, item := signatureIter.Next()
-		sig := Signature{}
-		if protected := item.FieldProtected(); protected.Exists() {
-			if sig.Protected, err = decodeBase64Url(protected.Must()); err != nil {
+	for _, commit := range commits {
+		if stateBuilder, ok := commit.(CommitPayload); ok {
+			if err = stateBuilder.ApplyToStream(&state); err != nil {
 				return
 			}
 		}
-		if sig.Signature, err = decodeBase64Url(item.FieldSignature()); err != nil {
+	}
+	return
+}
+
+func (impl IpfsImpl) LoadCommits(ctx context.Context, c cid.Cid) (commits []NodeDataDecoder, err error) {
+
+	return
+}
+
+func (impl IpfsImpl) LoadLog(ctx context.Context, c cid.Cid) (commit NodeDataDecoder, err error) {
+	var (
+		blkReader io.Reader
+		nd        datamodel.Node
+	)
+	if blkReader, err = impl.node.Block().Get(ctx, path.IpfsPath(c)); err != nil {
+		return
+	}
+	if c.Prefix().Codec == cid.DagJOSE {
+		commit = &SignedCommit{}
+		if nd, err = DecodeDagJWSNodeDataFromReader(blkReader); err != nil {
 			return
 		}
-
-		commit.Signatures = append(commit.Signatures, sig)
-	}
-	return
-}
-
-func LoadDagJWS(ctx context.Context, node *rpc.HttpApi, logCid cid.Cid) (dagJws dagjose.DecodedJWS, err error) {
-	var blockReader io.Reader
-	if blockReader, err = node.Block().Get(ctx, path.IpfsPath(logCid)); err != nil {
+		var buf bytes.Buffer
+		if err = dagjsonEncodeOption.Encode(nd, &buf); err != nil {
+			return
+		}
+		fmt.Println(c.Prefix().Codec, buf.String())
+		err = commit.DecodeFromNodeData(nd)
+		impl.LoadLog(ctx, commit.(*SignedCommit).Payload)
 		return
 	}
-	return BuildDagJWSFromReader(blockReader)
-}
 
-func BuildDagJWSFromReader(reader io.Reader) (dagJws dagjose.DecodedJWS, err error) {
-	builder := dagjose.Type.DecodedJWS.NewBuilder()
-	cfg := dagjose.DecodeOptions{
-		AddLink: true,
-	}
-	if err = cfg.DecodeJWS(builder, reader); err != nil {
+	if nd, err = DecodeDagCborNodeDataFromReader(blkReader); err != nil {
 		return
 	}
-	var ok bool
-	if dagJws, ok = builder.Build().(dagjose.DecodedJWS); !ok {
-		err = fmt.Errorf("cannot asset %s as dagjose.DecodedJWS", builder.Build())
+	var buf bytes.Buffer
+	if err = dagjsonEncodeOption.Encode(nd, &buf); err != nil {
+		return
 	}
-	return
-}
+	fmt.Println(c.Prefix().Codec, buf.String())
 
-func BuildPayloadFromReader(reader io.Reader) {
-	builder := basicnode.Prototype.Map.NewBuilder()
-	_ = builder
-}
-
-//nolint:unused
-func lookupIgnoreAbsent(key string, n datamodel.Node) (datamodel.Node, error) {
-	value, err := n.LookupByString(key)
-	if err != nil {
-		if _, notFoundErr := err.(datamodel.ErrNotExists); !notFoundErr {
-			return nil, err
-		}
-	}
-	if value == datamodel.Absent {
-		value = nil
-	}
-	return value, nil
-}
-
-//nolint:unused
-func lookupIgnoreNoSuchField(key string, n datamodel.Node) (datamodel.Node, error) {
-	value, err := lookupIgnoreAbsent(key, n)
-	if err != nil {
-		if _, noSuchFieldErr := err.(schema.ErrNoSuchField); !noSuchFieldErr {
-			return nil, err
-		}
-	}
-	return value, nil
-}
-
-func decodeBase64Url(field dagjose.Base64Url) (data []byte, err error) {
-	str, err := field.AsString()
-	if err != nil {
-		fmt.Println(err)
-	}
-	data, err = base64.RawURLEncoding.DecodeString(str)
-	return
-}
-
-//nolint:unused
-func decodeBase64UrlString(field dagjose.Base64Url) (string, error) {
-	data, err := decodeBase64Url(field)
-	return string(data), err
+	return nil, nil
 }

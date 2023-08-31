@@ -75,7 +75,7 @@ func (id StreamId) With(str string) StreamId {
 }
 
 func (id StreamId) GetStream(ctx context.Context) (stream Stream, err error) {
-	return GetStreamId(ctx, id)
+	return HttpApi.GetStreamId(HttpApi{}, ctx, id)
 }
 
 func NewStreamId(t StreamType, cidStr ...string) (id StreamId, err error) {
@@ -87,13 +87,18 @@ func NewStreamId(t StreamType, cidStr ...string) (id StreamId, err error) {
 	return
 }
 
+func MustParseStreamID(str string) StreamId {
+	id, err := ParseStreamID(str)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 func ParseStreamID(str string) (id StreamId, err error) {
 	var (
-		buf         []byte
-		encoding    multibase.Encoding
-		streamCodec uint64
-		streamType  uint64
-		idx         int
+		buf      []byte
+		encoding multibase.Encoding
 	)
 
 	if encoding, buf, err = multibase.Decode(str); err != nil {
@@ -103,34 +108,43 @@ func ParseStreamID(str string) (id StreamId, err error) {
 		err = fmt.Errorf("unexpected encoding id %c with input %s", encoding, str)
 		return
 	}
+	return CastStreamID(buf)
+}
+
+func CastStreamID(data []byte) (id StreamId, err error) {
+	var (
+		streamCodec uint64
+		streamType  uint64
+		idx         int
+	)
 	// check <multicodec-streamCodec>
-	if streamCodec, idx = binary.Uvarint(buf); idx <= 0 {
-		err = fmt.Errorf("unable to unpack stream codec %v", buf)
+	if streamCodec, idx = binary.Uvarint(data); idx <= 0 {
+		err = fmt.Errorf("unable to unpack stream codec %v", data)
 		return
 	}
 	if multicodec.Code(streamCodec) != multicodec.Streamid {
-		err = fmt.Errorf("unexpected multicodec %x != 0xce", buf[0])
+		err = fmt.Errorf("unexpected multicodec %x != 0xce", data[0])
 		return
 	}
-	buf = buf[idx:]
+	data = data[idx:]
 
 	// check <stream-type>
-	if streamType, idx = binary.Uvarint(buf); idx <= 0 {
-		err = fmt.Errorf("unable to unpack stream type %v", buf)
+	if streamType, idx = binary.Uvarint(data); idx <= 0 {
+		err = fmt.Errorf("unable to unpack stream type %v", data)
 		return
 	}
 	id.Type = StreamType(streamType)
-	buf = buf[idx:]
+	data = data[idx:]
 
 	var nr int
-	if nr, id.Cid, err = cid.CidFromBytes(buf); err != nil {
+	if nr, id.Cid, err = cid.CidFromBytes(data); err != nil {
 		return
 	}
-	buf = buf[nr:]
-	if len(buf) != 0 {
-		if len(buf) == 1 && buf[0] == 0 {
+	data = data[nr:]
+	if len(data) != 0 {
+		if len(data) == 1 && data[0] == 0 {
 			id.GenesisLog = true
-		} else if _, id.Log, err = cid.CidFromBytes(buf); err != nil {
+		} else if _, id.Log, err = cid.CidFromBytes(data); err != nil {
 			return
 		}
 	}
@@ -139,7 +153,7 @@ func ParseStreamID(str string) (id StreamId, err error) {
 
 var _ json.Marshaler = (*StreamId)(nil)
 
-func (id *StreamId) MarshalJSON() ([]byte, error) {
+func (id StreamId) MarshalJSON() ([]byte, error) {
 	return json.Marshal(id.String())
 }
 

@@ -1,13 +1,9 @@
 package ceramic
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
 
 	"github.com/ipfs/go-cid"
 )
@@ -72,21 +68,5 @@ func (state StreamState) ContentHash() (sum [32]byte, err error) {
 
 	sum = sha256.Sum256(state.Content)
 	hex.EncodeToString(sum[0:])
-	return
-}
-
-func GetStreamId(ctx context.Context, streamId StreamId) (stream Stream, err error) {
-	url := fmt.Sprintf("%s/api/v0/streams/%s", os.Getenv("CERAMIC_URL"), streamId)
-	var req *http.Request
-	var resp *http.Response
-	if req, err = http.NewRequestWithContext(ctx, http.MethodGet, url, nil); err != nil {
-		return
-	}
-	if resp, err = http.DefaultClient.Do(req); err != nil {
-		return
-	}
-	if err = json.NewDecoder(resp.Body).Decode(&stream); err != nil {
-		return
-	}
 	return
 }
