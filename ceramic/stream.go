@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 
 	"github.com/ipfs/go-cid"
 )
@@ -28,7 +29,7 @@ type StreamLog struct {
 	Cid            string     `json:"cid"`
 	Type           CommitType `json:"type"`
 	ExpirationTime *uint64    `json:"expirationTime,omitempty"`
-	Timestamp      uint64     `json:"timestamp"`
+	Timestamp      uint64     `json:"timestamp,omitempty"`
 }
 
 type AnchorProof struct {
@@ -38,15 +39,23 @@ type AnchorProof struct {
 	ChainId string `json:"chainId"`
 }
 
-func (state StreamState) StreamId() StreamId {
-	return StreamId{
-		Type: state.Type,
-		Cid:  cid.MustParse(state.Log[0].Cid),
+func (state StreamState) StreamId() (id StreamId, err error) {
+	id.Type = state.Type
+	if len(state.Log) == 0 {
+		err = fmt.Errorf("missing gensis stream log")
+		return
 	}
+	if id.Cid, err = cid.Parse(state.Log[0].Cid); err != nil {
+		return
+	}
+	return
 }
 
-func (state StreamState) CommitIds() (commitIds []StreamId) {
-	streamId := state.StreamId()
+func (state StreamState) CommitIds() (commitIds []StreamId, err error) {
+	var streamId StreamId
+	if streamId, err = state.StreamId(); err != nil {
+		return
+	}
 	commitIds = append(commitIds, streamId.Genesis())
 	for _, v := range state.Log[1:] {
 		commitIds = append(commitIds, streamId.With(v.Cid))

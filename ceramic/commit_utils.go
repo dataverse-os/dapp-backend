@@ -26,5 +26,6 @@ func DecodeDagCborNodeDataFromReader(reader io.Reader) (nd datamodel.Node, err e
 }
 
 func ContainField(nd datamodel.Node, key string) bool {
-	return lo.T2(nd.LookupByString(key)).A.IsNull()
+	v, err := nd.LookupByString(key)
+	return err == nil && v != nil
 }

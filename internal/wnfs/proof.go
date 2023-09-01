@@ -108,17 +108,24 @@ type CommitProof struct {
 
 func StoreAndVerifyContentHash(ctx context.Context, streamState ceramic.StreamState) (err error) {
 	var (
-		streamId            = streamState.StreamId()
+		streamId            ceramic.StreamId
 		commit              ceramic.Stream
 		commitProofs        = make([]CommitProof, len(streamState.Log))
 		commitProofsInDB    []CommitProof
 		commitProofsInDBMap = make(map[ceramic.StreamId]CommitProof)
-		commitIds           = streamState.CommitIds()
+		commitIds           []ceramic.StreamId
 	)
+
+	if streamId, err = streamState.StreamId(); err != nil {
+		return
+	}
+	if commitIds, err = streamState.CommitIds(); err != nil {
+		return
+	}
 
 	defer func() {
 		if err != nil {
-			fmt.Printf("wnfs check %s with %d commits\n", streamState.StreamId(), len(commitProofs))
+			fmt.Printf("wnfs check %s with %d commits\n", streamId, len(commitProofs))
 		}
 	}()
 

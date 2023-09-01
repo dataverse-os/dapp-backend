@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/ceramicnetwork/go-dag-jose/dagjose"
 	"github.com/ipfs/boxo/coreiface/path"
@@ -13,7 +14,12 @@ import (
 	"github.com/ipld/go-ipld-prime/datamodel"
 	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
 	"github.com/samber/lo"
+	"github.com/tidwall/sjson"
 )
+
+type Commit interface {
+	NodeDataDecoder
+}
 
 type NodeDataDecoder interface {
 	DecodeFromNodeData(nd datamodel.Node) (err error)
@@ -28,7 +34,7 @@ type CommitWithPayload interface {
 }
 
 type CommitPayload interface {
-	NodeDataDecoder
+	Commit
 	DelectType(nd datamodel.Node) bool
 	ApplyToStream(state *StreamState) (err error)
 }
@@ -69,8 +75,18 @@ type GenesisCommitPayload struct {
 	Data   json.RawMessage
 }
 
-func (commit *GenesisCommitPayload) ApplyToStream(state *StreamState) (err error) {
-	state.Content = commit.Data
+func (payload *GenesisCommitPayload) GetData() []byte {
+	return payload.Data
+}
+
+func (payload *GenesisCommitPayload) ApplyToStream(state *StreamState) (err error) {
+	state.Content = payload.Data
+	if state.Metadata, err = json.Marshal(map[string]any{
+		"controllers": payload.Header.Controllers,
+		"model":       payload.Header.Model,
+	}); err != nil {
+		return
+	}
 	return
 }
 
@@ -78,7 +94,7 @@ func (*GenesisCommitPayload) DelectType(nd datamodel.Node) bool {
 	return ContainField(nd, "header") && !ContainField(nd, "id")
 }
 
-func (commit *GenesisCommitPayload) DecodeFromNodeData(nd datamodel.Node) (err error) {
+func (payload *GenesisCommitPayload) DecodeFromNodeData(nd datamodel.Node) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("recovered in %s", r)
@@ -89,9 +105,9 @@ func (commit *GenesisCommitPayload) DecodeFromNodeData(nd datamodel.Node) (err e
 	if err = dagjsonEncodeOption.Encode(lo.Must(nd.LookupByString("data")), &buf); err != nil {
 		return
 	}
-	commit.Data = buf.Bytes()
+	payload.Data = buf.Bytes()
 	if headerNode, e := nd.LookupByString("header"); e == nil && !headerNode.IsNull() {
-		if err = commit.Header.DecodeFromNodeData(headerNode); err != nil {
+		if err = payload.Header.DecodeFromNodeData(headerNode); err != nil {
 			return
 		}
 	}
@@ -104,24 +120,26 @@ type DataCommitPayload struct {
 	ID     cid.Cid // link to init event
 	Prev   cid.Cid
 	Header *CommitHeader
-	Data   json.RawMessage
+	Pathes []Patch
 }
 
-func (commit *DataCommitPayload) DecodeFromNodeData(nd datamodel.Node) (err error) {
+func (payload *DataCommitPayload) DecodeFromNodeData(nd datamodel.Node) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("recovered in %s", r)
 			return
 		}
 	}()
-	commit.ID = MustParseLink(nd, "id")
-	commit.Prev = MustParseLink(nd, "prev")
+	payload.ID = MustParseLink(nd, "id")
+	payload.Prev = MustParseLink(nd, "prev")
 
 	var buf bytes.Buffer
 	if err = dagjsonEncodeOption.Encode(lo.Must(nd.LookupByString("data")), &buf); err != nil {
 		return
 	}
-	commit.Data = buf.Bytes()
+	if err = json.Unmarshal(buf.Bytes(), &payload.Pathes); err != nil {
+		return
+	}
 	return
 }
 
@@ -129,8 +147,26 @@ func (DataCommitPayload) DelectType(nd datamodel.Node) bool {
 	return ContainField(nd, "prev") && !ContainField(nd, "proof")
 }
 
+type Patch struct {
+	Operation string `json:"op"`
+	Path      string `json:"path"`
+	Value     any    `json:"value"`
+}
+
 func (commit *DataCommitPayload) ApplyToStream(state *StreamState) (err error) {
-	//TODO
+	for _, v := range commit.Pathes {
+		path := strings.ReplaceAll(v.Path[1:], "/", ".")
+		switch v.Operation {
+		case "add", "replace":
+			if state.Content, err = sjson.SetBytes(state.Content, path, v.Value); err != nil {
+				return
+			}
+		case "remove":
+			if state.Content, err = sjson.DeleteBytes(state.Content, path); err != nil {
+				return
+			}
+		}
+	}
 	return
 }
 
@@ -168,33 +204,28 @@ func (commit *AnchorCommit) DecodeFromNodeData(nd datamodel.Node) (err error) {
 var _ NodeDataDecoder = (*SignedCommit)(nil)
 
 type SignedCommit struct {
-	linkedCommit CommitPayload
-	Link         cid.Cid
-	Payload      cid.Cid
-	Signatures   []Signature
+	Link       cid.Cid
+	Payload    cid.Cid
+	Signatures []Signature
 }
 
-func (commit *SignedCommit) GetPayload() CommitPayload {
-	return commit.linkedCommit
-}
-
-func (commit *SignedCommit) LoadPayload(ctx context.Context, impl IpfsImpl) (err error) {
+func (commit *SignedCommit) LoadPayload(ctx context.Context, impl IpfsImpl) (payload CommitPayload, err error) {
 	var (
 		blkReader io.Reader
 		nd        datamodel.Node
 	)
-	if blkReader, err = impl.node.Block().Get(ctx, path.IpfsPath(commit.Payload)); err != nil {
+	if blkReader, err = impl.blockAPI.Get(ctx, path.IpfsPath(commit.Payload)); err != nil {
 		return
 	}
 	if nd, err = DecodeDagCborNodeDataFromReader(blkReader); err != nil {
 		return
 	}
 	if ContainField(nd, "prev") {
-		commit.linkedCommit = &DataCommitPayload{}
+		payload = &DataCommitPayload{}
 	} else {
-		commit.linkedCommit = &GenesisCommitPayload{}
+		payload = &GenesisCommitPayload{}
 	}
-	if err = commit.DecodeFromNodeData(nd); err != nil {
+	if err = payload.DecodeFromNodeData(nd); err != nil {
 		return
 	}
 	return

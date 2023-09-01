@@ -49,7 +49,7 @@ type PubSubKeepaliveMessage struct {
 	IPFSVersion string      `json:"ipfsVer"`
 }
 
-func QueryStream(ctx context.Context, node *rpc.HttpApi, network string, streamId StreamId) (tip cid.Cid, err error) {
+func (impl IpfsImpl) QueryStream(ctx context.Context, streamId StreamId) (tip cid.Cid, err error) {
 	var buf bytes.Buffer
 	if err = json.NewEncoder(&buf).Encode(map[string]any{
 		"typ":    MessageTypeQuery,
@@ -69,11 +69,11 @@ func QueryStream(ctx context.Context, node *rpc.HttpApi, network string, streamI
 		return
 	}
 	fmt.Println(buf.String())
-	if err = node.PubSub().Publish(ctx, network, buf.Bytes()); err != nil {
+	if err = impl.pubSubAPI.Publish(ctx, impl.network, buf.Bytes()); err != nil {
 		return
 	}
 	var sub iface.PubSubSubscription
-	if sub, err = node.PubSub().Subscribe(ctx, network); err != nil {
+	if sub, err = impl.pubSubAPI.Subscribe(ctx, impl.network); err != nil {
 		return
 	}
 	defer sub.Close()
