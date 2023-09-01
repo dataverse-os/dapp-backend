@@ -34,7 +34,7 @@ under ```dapp-backend/```
 docker run -it --rm \
   -v "$PWD/.private-key.env:/data/.private-key.env" \
   -v "$PWD/daemon.config.json:/data/daemon.config.json" \
-  dataverseos/dapp-backend-prerun:latest
+  ghcr.io/dataverse-os/dapp-backend-prerun:latest
 ```
 **Example Result**
 ```bash

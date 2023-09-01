@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   ceramic:
-    image: ceramicnetwork/js-ceramic:2.28.0
+    image: ceramicnetwork/composedb:2.35.0
     volumes:
       - ~/.ceramic/:/root/.ceramic/
     healthcheck:
@@ -16,7 +16,7 @@ services:
       start_period: 40s
 
   dapp-backend:
-    image: dataverseos/dapp-backend:latest
+    image: ghcr.io/dataverse-os/dapp-backend:latest
     environment:
       - CERAMIC_URL=http://ceramic:7007
     env_file:
