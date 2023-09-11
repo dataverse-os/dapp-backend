@@ -26,6 +26,13 @@ jobs:
           npm install
           npm run build
 
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: build rust lib
+        run: make build-rs
+
       - uses: actions/cache@v2
         with:
           path: |

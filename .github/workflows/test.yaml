@@ -33,6 +33,13 @@ jobs:
           pnpm install
           pnpm run build
 
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: build rust lib
+        run: make build-rs
+
       # - name: setup ceramic secret and config
       #   id: ceramic-secret
       #   run: |

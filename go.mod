@@ -8,9 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.0
 	github.com/graphql-go/graphql v0.8.1
-	github.com/hasura/go-graphql-client v0.10.0
 	github.com/ipfs/go-cid v0.4.1
-	github.com/lib/pq v1.10.9
 	github.com/multiformats/go-multibase v0.2.0
 	github.com/multiformats/go-multicodec v0.9.0
 	github.com/pkg/errors v0.9.1
@@ -73,5 +71,4 @@ require (
 	golang.org/x/text v0.11.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gorm.io/driver/mysql v1.4.7 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
 )

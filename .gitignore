@@ -1,4 +1,5 @@
 .privatekey
 .vscode
 *.exe
+dapp-backend
 coverage.out

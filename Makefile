@@ -4,10 +4,19 @@ GOMOD = $(GOCMD) mod
 GOTEST = $(GOCMD) test
 
 build: generate-js
-	go build -o dapp-backend.exe ./cmd/
+	go build -o dapp-backend ./cmd/
 
 lint:
 	golangci-lint run --fix
+
+build-rs:
+	cd rs-binding && cargo build --release
+ifeq ($(shell uname),Darwin)
+	cp rs-binding/target/release/librs_binding.dylib ./lib
+else
+	cp rs-binding/target/release/librs_binding.so ./lib
+endif
+	cp rs-binding/target/rs-binding.h ./lib
 
 generate-js:
 	cd js-scripts && pnpm run build
