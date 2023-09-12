@@ -3,7 +3,6 @@ package ceramic
 import (
 	"bytes"
 	"crypto/ed25519"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 
@@ -27,8 +26,7 @@ func GenerateDID(key string) (did string, err error) {
 	ed25519Key := ed25519.NewKeyFromSeed(seed)
 	pub := ed25519Key.Public().(ed25519.PublicKey)
 	var buf bytes.Buffer
-	buf.Write(binary.AppendUvarint(nil, uint64(multicodec.Ed25519Pub)))
-	buf.Write(binary.AppendUvarint(nil, uint64(0x01)))
+	buf.Write([]byte{byte(multicodec.Ed25519Pub), 0x01})
 	buf.Write(pub)
 	did = fmt.Sprintf("did:key:%s", didEncoder.Encode(buf.Bytes()))
 	return

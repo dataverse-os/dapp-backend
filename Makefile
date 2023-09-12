@@ -3,7 +3,7 @@ GOBUILD = $(GOCMD) build
 GOMOD = $(GOCMD) mod
 GOTEST = $(GOCMD) test
 
-build: generate-js
+build: generate-js build-rs
 	go build -o dapp-backend ./cmd/
 
 lint:
@@ -29,5 +29,17 @@ install-tools: download
 	echo Installing tools from tools.go
 	cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %@latest
 
-test:
+test: test-go test-rs
+
+test-go:
 	go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+test-rs:
+	cd rs-binding && cargo test
+
+.PHONY: check-clippy
+check-clippy:
+	# Check with default features
+	cd rs-binding && cargo clippy --all-targets -- -D warnings
+	# Check with all features
+	cd rs-binding && cargo clippy --all-targets --all-features -- -D warnings

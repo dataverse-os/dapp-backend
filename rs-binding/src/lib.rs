@@ -40,8 +40,9 @@ pub struct CResult {
     err: libc::c_int,
 }
 
+/// # Safety
 #[no_mangle]
-pub extern "C" fn generate_did(key: *const libc::c_char) -> CResult {
+pub unsafe extern "C" fn generate_did(key: *const libc::c_char) -> CResult {
     let pk = unsafe { CStr::from_ptr(key) }.to_str().unwrap();
     match generate_did_str(pk) {
         Ok(res) => CResult {
@@ -55,8 +56,9 @@ pub extern "C" fn generate_did(key: *const libc::c_char) -> CResult {
     }
 }
 
+/// # Safety
 #[no_mangle]
-pub extern "C" fn get_ceramic_node_status(
+pub unsafe extern "C" fn get_ceramic_node_status(
     ceramic: *const libc::c_char,
     key: *const libc::c_char,
 ) -> CResult {
@@ -81,5 +83,26 @@ pub extern "C" fn get_ceramic_node_status(
     CResult {
         data: CString::new(res).unwrap().into_raw(),
         err: 0 as libc::c_int,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_did_str() {
+        // Test with a valid public key
+        let pk = "554e4b6f5356bf0744b299ae8c9ded7a2be362ad067d071128889b8d5ec93332";
+        let expected_did = "did:key:z6MkfwdtJNdaq9GZrGGzS5fswWbxn9db2Qz4YZFcZ536oUzu";
+        assert_eq!(generate_did_str(pk).unwrap(), expected_did);
+
+        // Test with an invalid public key (odd length)
+        let pk = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde";
+        assert!(generate_did_str(pk).is_err());
+
+        // Test with an invalid public key (non-hex character)
+        let pk = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdeg";
+        assert!(generate_did_str(pk).is_err());
     }
 }
