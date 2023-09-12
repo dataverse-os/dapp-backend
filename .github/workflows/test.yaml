@@ -38,7 +38,10 @@ jobs:
           toolchain: stable
 
       - name: build rust lib
-        run: make build-rs
+        run: |
+          make build-rs
+          ls -la ./rs-binding/target/release
+          ls -la ./lib
 
       # - name: setup ceramic secret and config
       #   id: ceramic-secret
