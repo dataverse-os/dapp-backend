@@ -21,7 +21,6 @@ type NodeJSBinding struct{}
 var (
 	tempCheckSyntaxScript   *os.File
 	tempDeployModelScript   *os.File
-	tempGenerateDIDScript   *os.File
 	tempAdminAccessScript   *os.File
 	tempIndexedModelsScript *os.File
 )
@@ -32,9 +31,6 @@ func init() {
 		log.Panicln(err)
 	}
 	if tempDeployModelScript, err = initFile(jsscripts.DeployModel); err != nil {
-		log.Panicln(err)
-	}
-	if tempGenerateDIDScript, err = initFile(jsscripts.GenerateDID); err != nil {
 		log.Panicln(err)
 	}
 	if tempAdminAccessScript, err = initFile(jsscripts.AdminAccess); err != nil {
@@ -89,16 +85,6 @@ func (*NodeJSBinding) CreateComposite(ctx context.Context, schema string, sess S
 		return
 	}
 	composite = strings.TrimSuffix(string(out), "\n")
-	return
-}
-
-func (*NodeJSBinding) GenerateDID(ctx context.Context, key string) (did string, err error) {
-	cmd := exec.CommandContext(ctx, "node", tempGenerateDIDScript.Name(), key)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return
-	}
-	did = strings.TrimSuffix(string(out), "\n")
 	return
 }
 

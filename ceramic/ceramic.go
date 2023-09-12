@@ -45,10 +45,13 @@ func DeployStreamModel(ctx context.Context, schema string, sess Session) (compos
 	return
 }
 
+type DIDGenerator interface {
+	GenerateDID(key string) (did string, err error)
+}
+
 type ClientInterface interface {
 	CreateComposite(ctx context.Context, schema string, sess Session) (composite string, err error)
 	CheckSyntax(ctx context.Context, schema string) (err error)
-	GenerateDID(ctx context.Context, key string) (did string, err error)
 	CheckAdminAccess(ctx context.Context, sess Session) (err error)
 	GetIndexedModels(ctx context.Context, sess Session) (streamIDs []string, err error)
 }

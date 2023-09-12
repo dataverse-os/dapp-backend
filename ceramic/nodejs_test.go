@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -52,43 +51,6 @@ func TestNodeJSBinding_CheckSyntax(t *testing.T) {
 			n := &NodeJSBinding{}
 			if err := n.CheckSyntax(tt.args.ctx, tt.args.schema); (err != nil) != tt.wantErr {
 				t.Errorf("NodeJSBinding.CheckSyntax() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestNodeJSBinding_GenerateDID(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		key string
-	}
-	tests := []struct {
-		name    string
-		n       *NodeJSBinding
-		args    args
-		wantDid string
-		wantErr bool
-	}{
-		{
-			name: "common",
-			args: args{
-				ctx: context.Background(),
-				key: "61c5ed6b2a619e21d7d0d0a9b9a591e4c0f014c3f25eb1d26c1b53332f96afe5",
-			},
-			wantDid: "did:key:z6MkjSnks3PuMFQhJHS6NfwD3tHfkx6sSGxHjzAQhN113rZj",
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &NodeJSBinding{}
-			gotDid, err := n.GenerateDID(tt.args.ctx, tt.args.key)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NodeJSBinding.GenerateDID() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr && !strings.HasPrefix(gotDid, "did:") {
-				t.Errorf("NodeJSBinding.GenerateDID() invalid did: %v", gotDid)
 			}
 		})
 	}

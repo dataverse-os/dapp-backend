@@ -33,6 +33,13 @@ jobs:
           pnpm install
           pnpm run build
 
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: build rust lib
+        run: make build-rs
+
       # - name: setup ceramic secret and config
       #   id: ceramic-secret
       #   run: |
@@ -53,7 +60,10 @@ jobs:
       #   run: curl http://localhost:7007/api/v0/node/healthcheck
 
       - name: Run coverage
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/lib
+          echo $LD_LIBRARY_PATH
+          go test -race -coverprofile=coverage.out -covermode=atomic ./...
         # env:
           # CERAMIC_URL: http://localhost:7007
           # CERAMIC_ADMIN_KEY: ${{ steps.ceramic-secret.outputs.CERAMIC_ADMIN_KEY }}
