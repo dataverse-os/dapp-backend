@@ -3,8 +3,10 @@ GOBUILD = $(GOCMD) build
 GOMOD = $(GOCMD) mod
 GOTEST = $(GOCMD) test
 
-build: generate-js build-rs
-	go build -o dapp-backend ./cmd/
+build-all: generate-js build-rs build-go
+
+build-go:
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib/ go build -o dapp-backend ./cmd/
 
 lint:
 	golangci-lint run --fix
@@ -19,7 +21,7 @@ endif
 	cp rs-binding/target/rs-binding.h ./lib
 
 generate-js:
-	cd js-scripts && pnpm run build
+	cd js-scripts && pnpm install && pnpm run build
 
 download:
 	echo Download go.mod dependencies
